@@ -1,10 +1,12 @@
 package org.micks.DiscGolfApplication;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class DiscGolfEventService {
 
     public List<DiscGolfEventDTO> getEvents() {
@@ -15,5 +17,9 @@ public class DiscGolfEventService {
                 new DiscGolfEventDTO("09/10/2024", "305", "-", "Flaying plates", "Phase 1", "20 / 25"),
                 new DiscGolfEventDTO("11/11/2024", "356", "-", "Team Disk", "Phase 1", "22 / 26")
         );
+    }
+
+    public void createEvent(DiscGolfEventDTO discGolfEventDTO) {
+        log.info("Creating new event: {}", discGolfEventDTO.getTournamentTitle());
     }
 }
