@@ -1,13 +1,11 @@
 package org.micks.DiscGolfApplication;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,28 +13,27 @@ import java.util.List;
 @Slf4j
 public class DiscGolfEventService {
 
-    public List<DiscGolfEventDTO> getEvents() throws SQLException {
+    @Autowired
+    private DiscGolfDbConnection dbConnection;
 
-        Connection connection = DriverManager.getConnection("jdbc:mariadb://app.disc-golf.pl:3306/disc_golf?user=dg_user2&password=MBV6qsa5rufDAHUe");
-
-        String selectSQL = "SELECT * FROM Events";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(selectSQL);
-
-        ArrayList<DiscGolfEventDTO> discGolfEventDTOList = new ArrayList<>();
-        while (resultSet.next()) {
-            DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
-                    resultSet.getString("tournamentDate"),
-                    resultSet.getString("pdga"),
-                    resultSet.getString("tournamentTitle"),
-                    resultSet.getString("region"),
-                    resultSet.getString("registration"),
-                    resultSet.getString("vacancies")
-            );
-            discGolfEventDTOList.add(discGolfEventDTO);
+    public List<DiscGolfEventDTO> getEvents() {
+        try (ResultSet resultSet = dbConnection.executeQuery("SELECT * FROM Events")) {
+            List<DiscGolfEventDTO> discGolfEventDTOList = new ArrayList<>();
+            while (resultSet.next()) {
+                DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
+                        resultSet.getString("tournamentDate"),
+                        resultSet.getString("pdga"),
+                        resultSet.getString("tournamentTitle"),
+                        resultSet.getString("region"),
+                        resultSet.getString("registration"),
+                        resultSet.getString("vacancies")
+                );
+                discGolfEventDTOList.add(discGolfEventDTO);
+            }
+            return discGolfEventDTOList;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Error while getting events from database", e);
         }
-
-        return discGolfEventDTOList;
     }
 
     public void createEvent(DiscGolfEventDTO discGolfEventDTO) {
