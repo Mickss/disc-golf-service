@@ -3,20 +3,40 @@ package org.micks.DiscGolfApplication;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Slf4j
 public class DiscGolfEventService {
 
-    public List<DiscGolfEventDTO> getEvents() {
-        return List.of(
-                new DiscGolfEventDTO("05/03/2024", "159", "-", "Fire Disk", "Phase 1", "22 / 22"),
-                new DiscGolfEventDTO("15/06/2024", "237", "-", "Spin Around", "Phase 1", "0 / 30"),
-                new DiscGolfEventDTO("04/08/2024", "262", "-", "Golf Basket", "Phase 1", "33 / 45"),
-                new DiscGolfEventDTO("09/10/2024", "305", "-", "Flaying plates", "Phase 1", "20 / 25"),
-                new DiscGolfEventDTO("11/11/2024", "356", "-", "Team Disk", "Phase 1", "22 / 26")
-        );
+    public List<DiscGolfEventDTO> getEvents() throws SQLException {
+
+        Connection connection = DriverManager.getConnection("jdbc:mariadb://app.disc-golf.pl:3306/disc_golf?user=dg_user2&password=MBV6qsa5rufDAHUe");
+
+        String selectSQL = "SELECT * FROM Events";
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(selectSQL);
+
+        ArrayList<DiscGolfEventDTO> discGolfEventDTOList = new ArrayList<>();
+        while (resultSet.next()) {
+            DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
+                    resultSet.getString("tournamentDate"),
+                    resultSet.getString("pdga"),
+                    resultSet.getString("tournamentTitle"),
+                    resultSet.getString("region"),
+                    resultSet.getString("registration"),
+                    resultSet.getString("vacancies")
+            );
+            discGolfEventDTOList.add(discGolfEventDTO);
+        }
+
+        return discGolfEventDTOList;
     }
 
     public void createEvent(DiscGolfEventDTO discGolfEventDTO) {

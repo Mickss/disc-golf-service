@@ -8,10 +8,9 @@ import lombok.Getter;
 public class DiscGolfEventDTO {
 
     private String tournamentDate;
-    private String league;
     private String pdga;
     private String tournamentTitle;
+    private String region;
     private String registration;
-    private String state;
-
+    private String vacancies;
 }
