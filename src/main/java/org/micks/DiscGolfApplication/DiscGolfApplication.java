@@ -10,23 +10,23 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @Slf4j
 public class DiscGolfApplication {
 
-	@Autowired
-	private DatabaseConfigProperties databaseConfigProperties;
+    @Autowired
+    private DatabaseConfigProperties databaseConfigProperties;
 
-	public static void main(String[] args) {
-		SpringApplication.run(DiscGolfApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DiscGolfApplication.class, args);
+    }
 
-	@PostConstruct
-	public void init() {
-		checkDatabaseConnection();
-	}
+    @PostConstruct
+    public void init() {
+        checkDatabaseConnection();
+    }
 
-	private void checkDatabaseConnection() {
-		if (databaseConfigProperties.getName() == null) {
-			throw new IllegalStateException("Cannot read database configuration");
-		} else {
-			log.info("Database configuration OK. Using database: {}", databaseConfigProperties.getName());
-		}
-	}
+    private void checkDatabaseConnection() {
+        if (databaseConfigProperties.getName() == null) {
+            throw new IllegalStateException("Cannot read database configuration");
+        } else {
+            log.info("Database configuration OK. Using database: {}", databaseConfigProperties.getName());
+        }
+    }
 }
