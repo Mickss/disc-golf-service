@@ -1,0 +1,9 @@
+create table Events(
+  id UUID,
+  tournamentDate varchar(255),
+  pdga varchar(255),
+  tournamentTitle varchar(255),
+  region varchar(255),
+  registration varchar(255),
+  vacancies varchar(255)
+);

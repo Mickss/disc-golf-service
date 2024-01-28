@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class DiscGolfEventDTO {
-
+    private String id;
     private String tournamentDate;
     private String pdga;
     private String tournamentTitle;
