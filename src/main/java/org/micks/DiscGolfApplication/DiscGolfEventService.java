@@ -56,4 +56,29 @@ public class DiscGolfEventService {
             throw new RuntimeException(e);
         }
     }
+
+    public DiscGolfEventDTO getEvent(String eventId) {
+        try (Connection connection = dbConnection.connect()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM Events WHERE ID = ?");
+            statement.setString(1, eventId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
+                        resultSet.getString("id"),
+                        resultSet.getString("tournamentDate"),
+                        resultSet.getString("pdga"),
+                        resultSet.getString("tournamentTitle"),
+                        resultSet.getString("region"),
+                        resultSet.getString("registration"),
+                        resultSet.getString("vacancies")
+                );
+                statement.close();
+                return discGolfEventDTO;
+            } else {
+                throw new IllegalStateException("Could not find event for id: " + eventId);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while getting event with id: " + eventId, e);
+        }
+    }
 }
