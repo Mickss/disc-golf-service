@@ -24,6 +24,7 @@ public class DiscGolfEventService {
             List<DiscGolfEventDTO> discGolfEventDTOList = new ArrayList<>();
             while (resultSet.next()) {
                 DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
+                        resultSet.getString("id"),
                         resultSet.getString("tournamentDate"),
                         resultSet.getString("pdga"),
                         resultSet.getString("tournamentTitle"),
@@ -42,7 +43,7 @@ public class DiscGolfEventService {
     public void createEvent(DiscGolfEventDTO discGolfEventDTO) {
         log.info("Creating new event: {}", discGolfEventDTO.getTournamentTitle());
         try (Connection connection = dbConnection.connect()) {
-            PreparedStatement statement = connection.prepareStatement("insert into Events values(?,?,?,?,?,?)");
+            PreparedStatement statement = connection.prepareStatement("insert into Events values(UUID(),?,?,?,?,?,?)");
             statement.setString(1, discGolfEventDTO.getTournamentDate());
             statement.setString(2, discGolfEventDTO.getPdga());
             statement.setString(3, discGolfEventDTO.getTournamentTitle());
