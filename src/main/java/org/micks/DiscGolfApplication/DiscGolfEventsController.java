@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,5 +39,10 @@ public class DiscGolfEventsController {
     @GetMapping("/{eventId}")
     public DiscGolfEventDTO getEvent(@PathVariable String eventId) {
         return discGolfEventService.getEvent(eventId);
+    }
+
+    @PutMapping(value = "/{eventId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void editEvent(@PathVariable String eventId, @RequestBody DiscGolfEventDTO discGolfEventDTO) {
+        discGolfEventService.editEvents(eventId, discGolfEventDTO);
     }
 }
