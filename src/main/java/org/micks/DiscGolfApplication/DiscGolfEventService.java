@@ -81,4 +81,21 @@ public class DiscGolfEventService {
             throw new RuntimeException("Error while getting event with id: " + eventId, e);
         }
     }
+
+    public void editEvents(String eventId, DiscGolfEventDTO discGolfEventDTO) {
+        try (Connection connection = dbConnection.connect()) {
+            PreparedStatement statement = connection.prepareStatement
+                    ("UPDATE Events SET tournamentDate = ?, pdga = ?, tournamentTitle = ?, region = ?, registration = ? WHERE id = ?");
+                statement.setString(1, discGolfEventDTO.getTournamentDate());
+                statement.setString(2, discGolfEventDTO.getPdga());
+                statement.setString(3, discGolfEventDTO.getTournamentTitle());
+                statement.setString(4, discGolfEventDTO.getRegion());
+                statement.setString(5, discGolfEventDTO.getRegistration());
+                statement.setString(6, eventId);
+                statement.execute();
+                statement.close();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while getting event with id: " + eventId, e);
+        }
+    }
 }
