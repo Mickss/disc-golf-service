@@ -53,7 +53,7 @@ public class DiscGolfEventService {
             statement.execute();
             statement.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error while creating event with title: " + discGolfEventDTO.getTournamentTitle(), e);
         }
     }
 
@@ -83,6 +83,7 @@ public class DiscGolfEventService {
     }
 
     public void editEvents(String eventId, DiscGolfEventDTO discGolfEventDTO) {
+        log.info("Editing event with id: {}", eventId);
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement
                     ("UPDATE Events SET tournamentDate = ?, pdga = ?, tournamentTitle = ?, region = ?, registration = ? WHERE id = ?");
@@ -95,7 +96,7 @@ public class DiscGolfEventService {
                 statement.execute();
                 statement.close();
         } catch (SQLException e) {
-            throw new RuntimeException("Error while getting event with id: " + eventId, e);
+            throw new RuntimeException("Error while editing event with id: " + eventId, e);
         }
     }
 }

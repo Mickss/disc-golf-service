@@ -1,5 +1,6 @@
 package org.micks.DiscGolfApplication;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,15 +17,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/events")
 @CrossOrigin
+@Slf4j
 public class DiscGolfEventsController {
 
     @Autowired
     private DiscGolfEventService discGolfEventService;
-
-    @GetMapping("/test")
-    public String test() {
-        return "test application";
-    }
 
     @GetMapping
     public List<DiscGolfEventDTO> getEvents() {
@@ -33,6 +30,7 @@ public class DiscGolfEventsController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public void createEvent(@RequestBody DiscGolfEventDTO discGolfEventDTO) {
+        log.info("Received request for creating new event: {}", discGolfEventDTO);
         discGolfEventService.createEvent(discGolfEventDTO);
     }
 
@@ -43,6 +41,7 @@ public class DiscGolfEventsController {
 
     @PutMapping(value = "/{eventId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void editEvent(@PathVariable String eventId, @RequestBody DiscGolfEventDTO discGolfEventDTO) {
+        log.info("Received request for editing event for id: {}. Payload: {}", eventId, discGolfEventDTO);
         discGolfEventService.editEvents(eventId, discGolfEventDTO);
     }
 }
