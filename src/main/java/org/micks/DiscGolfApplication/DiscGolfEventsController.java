@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -24,8 +25,9 @@ public class DiscGolfEventsController {
     private DiscGolfEventService discGolfEventService;
 
     @GetMapping
-    public List<DiscGolfEventDTO> getEvents() {
-        return discGolfEventService.getEvents();
+    public List<DiscGolfEventDTO> getEvents(@RequestParam(required = false) String valueToOrderBy,
+                                            @RequestParam(required = false) OrderDirection orderDirection) {
+        return discGolfEventService.getEvents(valueToOrderBy, orderDirection);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
