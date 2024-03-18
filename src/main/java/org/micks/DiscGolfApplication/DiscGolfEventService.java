@@ -1,9 +1,11 @@
 package org.micks.DiscGolfApplication;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +13,7 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -21,10 +24,28 @@ public class DiscGolfEventService {
 
     @Autowired
     private DiscGolfDbConnection dbConnection;
+    private List<String> allowedColumnNames;
 
-    public List<DiscGolfEventDTO> getEvents() {
+    @PostConstruct
+    private void init() {
+        Field[] declaredFields = DiscGolfEventDTO.class.getDeclaredFields();
+        allowedColumnNames = Arrays.stream(declaredFields).map(Field::getName).toList();
+    }
+
+    public List<DiscGolfEventDTO> getEvents(String valueToOrderBy, OrderDirection orderDirection) {
         try (Connection connection = dbConnection.connect()) {
-            ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM Events");
+            String query = "SELECT * FROM Events";
+            if (valueToOrderBy != null) {
+                if (!allowedColumnNames.contains(valueToOrderBy)) {
+                    throw new BadRequestException("Incorrect order column name: " + valueToOrderBy);
+                }
+                query += " ORDER BY " + valueToOrderBy;
+                if (orderDirection != null) {
+                    query += " " + orderDirection;
+                }
+            }
+            log.info("Executing query: {}", query);
+            ResultSet resultSet = connection.createStatement().executeQuery(query);
             List<DiscGolfEventDTO> discGolfEventDTOList = new ArrayList<>();
             while (resultSet.next()) {
                 DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
@@ -91,14 +112,14 @@ public class DiscGolfEventService {
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement
                     ("UPDATE Events SET tournamentDate = ?, pdga = ?, tournamentTitle = ?, region = ?, registration = ? WHERE id = ?");
-                statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
-                statement.setString(2, discGolfEventDTO.getPdga());
-                statement.setString(3, discGolfEventDTO.getTournamentTitle());
-                statement.setString(4, discGolfEventDTO.getRegion());
-                statement.setString(5, discGolfEventDTO.getRegistration());
-                statement.setString(6, eventId);
-                statement.execute();
-                statement.close();
+            statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
+            statement.setString(2, discGolfEventDTO.getPdga());
+            statement.setString(3, discGolfEventDTO.getTournamentTitle());
+            statement.setString(4, discGolfEventDTO.getRegion());
+            statement.setString(5, discGolfEventDTO.getRegistration());
+            statement.setString(6, eventId);
+            statement.execute();
+            statement.close();
         } catch (SQLException e) {
             throw new RuntimeException("Error while editing event with id: " + eventId, e);
         }
