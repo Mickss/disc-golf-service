@@ -10,6 +10,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +19,8 @@ import java.util.List;
 @Service
 @Slf4j
 public class DiscGolfEventService {
+
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     @Autowired
     private DiscGolfDbConnection dbConnection;
@@ -46,7 +50,7 @@ public class DiscGolfEventService {
             while (resultSet.next()) {
                 DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
                         resultSet.getString("id"),
-                        resultSet.getString("tournamentDate"),
+                        resultSet.getDate("tournamentDate"),
                         resultSet.getString("pdga"),
                         resultSet.getString("tournamentTitle"),
                         resultSet.getString("region"),
@@ -65,7 +69,7 @@ public class DiscGolfEventService {
         log.info("Creating new event: {}", discGolfEventDTO.getTournamentTitle());
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement("insert into Events values(UUID(),?,?,?,?,?,?)");
-            statement.setString(1, discGolfEventDTO.getTournamentDate());
+            statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
             statement.setString(2, discGolfEventDTO.getPdga());
             statement.setString(3, discGolfEventDTO.getTournamentTitle());
             statement.setString(4, discGolfEventDTO.getRegion());
@@ -86,7 +90,7 @@ public class DiscGolfEventService {
             if (resultSet.next()) {
                 DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
                         resultSet.getString("id"),
-                        resultSet.getString("tournamentDate"),
+                        resultSet.getDate("tournamentDate"),
                         resultSet.getString("pdga"),
                         resultSet.getString("tournamentTitle"),
                         resultSet.getString("region"),
@@ -108,7 +112,7 @@ public class DiscGolfEventService {
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement
                     ("UPDATE Events SET tournamentDate = ?, pdga = ?, tournamentTitle = ?, region = ?, registration = ? WHERE id = ?");
-            statement.setString(1, discGolfEventDTO.getTournamentDate());
+            statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
             statement.setString(2, discGolfEventDTO.getPdga());
             statement.setString(3, discGolfEventDTO.getTournamentTitle());
             statement.setString(4, discGolfEventDTO.getRegion());
