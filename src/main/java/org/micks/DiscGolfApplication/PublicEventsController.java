@@ -15,7 +15,6 @@ public class PublicEventsController {
     @Autowired
     private DiscGolfEventService discGolfEventService;
 
-
     @GetMapping("/events")
     public List<DiscGolfEventDTO> getEvents(@RequestParam(required = false) String valueToOrderBy,
                                             @RequestParam(required = false) OrderDirection orderDirection) {

@@ -2,13 +2,16 @@ package org.micks.DiscGolfApplication;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +27,9 @@ public class DiscGolfEventsController {
     @Autowired
     private DiscGolfEventService discGolfEventService;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping
     public List<DiscGolfEventDTO> getEvents(@RequestParam(required = false) String valueToOrderBy,
                                             @RequestParam(required = false) OrderDirection orderDirection) {
@@ -31,9 +37,15 @@ public class DiscGolfEventsController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void createEvent(@RequestBody DiscGolfEventDTO discGolfEventDTO) {
+    public ResponseEntity<Void> createEvent(@RequestBody DiscGolfEventDTO discGolfEventDTO,
+                                            @RequestHeader(value = "Authorization") String token) {
         log.info("Received request for creating new event: {}", discGolfEventDTO);
+        if (!userService.isUserAdmin(token)) {
+            log.warn("User with token {} is not an admin", token);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         discGolfEventService.createEvent(discGolfEventDTO);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{eventId}")
