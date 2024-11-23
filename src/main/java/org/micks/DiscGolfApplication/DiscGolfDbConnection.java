@@ -14,7 +14,7 @@ public class DiscGolfDbConnection {
     private DatabaseConfigProperties databaseConfigProperties;
 
     public Connection connect() throws SQLException {
-        String url = String.format("jdbc:mariadb://app.disc-golf.pl:3306/%s?user=%s&password=%s",
+        String url = String.format("jdbc:mariadb://frog01.mikr.us:3306/%s?user=%s&password=%s",
                 databaseConfigProperties.getName(),
                 databaseConfigProperties.getUser(),
                 databaseConfigProperties.getPassword()
