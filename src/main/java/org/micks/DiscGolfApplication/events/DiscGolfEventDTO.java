@@ -1,4 +1,4 @@
-package org.micks.DiscGolfApplication;
+package org.micks.DiscGolfApplication.events;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

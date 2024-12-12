@@ -1,4 +1,4 @@
-package org.micks.DiscGolfApplication;
+package org.micks.DiscGolfApplication.events;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

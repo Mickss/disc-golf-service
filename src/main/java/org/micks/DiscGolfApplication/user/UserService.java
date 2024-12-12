@@ -1,4 +1,4 @@
-package org.micks.DiscGolfApplication;
+package org.micks.DiscGolfApplication.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
