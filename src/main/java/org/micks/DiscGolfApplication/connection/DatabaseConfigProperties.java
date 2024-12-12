@@ -1,4 +1,4 @@
-package org.micks.DiscGolfApplication;
+package org.micks.DiscGolfApplication.connection;
 
 import lombok.Getter;
 import lombok.Setter;

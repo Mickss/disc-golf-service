@@ -1,7 +1,9 @@
-package org.micks.DiscGolfApplication;
+package org.micks.DiscGolfApplication.events;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.micks.DiscGolfApplication.connection.DiscGolfDbConnection;
+import org.micks.DiscGolfApplication.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

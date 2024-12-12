@@ -1,6 +1,7 @@
-package org.micks.DiscGolfApplication;
+package org.micks.DiscGolfApplication.events;
 
 import lombok.extern.slf4j.Slf4j;
+import org.micks.DiscGolfApplication.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
