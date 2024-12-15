@@ -1,4 +1,4 @@
-package org.micks.DiscGolfApplication.util;
+package org.micks.DiscGolfApplication;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
