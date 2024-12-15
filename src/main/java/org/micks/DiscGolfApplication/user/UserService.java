@@ -22,13 +22,18 @@ public class UserService {
     }
 
     private boolean checkUserRole(String token) {
+        UserDTO userDTO = getLoggedInUser(token);
+        return "ADMIN".equals(userDTO.getRole());
+    }
+
+    public UserDTO getLoggedInUser(String authorizationHeader) {
         String authServiceUrl = "http://localhost:25003/users/logged-in";
 
-        log.info("Sending request to auth service with token: " + token);
+        log.info("Sending request to auth service with token: " + authorizationHeader);
 
         Request request = new Request.Builder()
                 .url(authServiceUrl)
-                .addHeader("Authorization", token)
+                .addHeader("Authorization", authorizationHeader)
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
@@ -41,9 +46,7 @@ public class UserService {
             log.info("Auth service response: " + responseBody);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            UserDTO userDTO = objectMapper.readValue(responseBody, UserDTO.class);
-
-            return "ADMIN".equals(userDTO.getRole());
+            return objectMapper.readValue(responseBody, UserDTO.class);
         } catch (IOException e) {
             throw new IllegalStateException("Error while getting user response", e);
         }

@@ -1,6 +1,7 @@
 package org.micks.DiscGolfApplication.events;
 
 import lombok.extern.slf4j.Slf4j;
+import org.micks.DiscGolfApplication.user.UserDTO;
 import org.micks.DiscGolfApplication.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,9 @@ public class DiscGolfEventsController {
 
     @Autowired
     private DiscGolfEventService discGolfEventService;
+
+    @Autowired
+    private EventRegistrationService eventRegistrationService;
 
     @Autowired
     private UserService userService;
@@ -58,5 +62,13 @@ public class DiscGolfEventsController {
     public void editEvent(@PathVariable String eventId, @RequestBody DiscGolfEventDTO discGolfEventDTO) {
         log.info("Received request for editing event for id: {}. Payload: {}", eventId, discGolfEventDTO);
         discGolfEventService.editEvents(eventId, discGolfEventDTO);
+    }
+
+    @PostMapping("/{eventId}/register")
+    public void registerUserForEvent(@RequestHeader(value = "Authorization") String authorizationHeader,
+                                     @PathVariable String eventId) {
+        log.info("Starting registration on event {}", eventId);
+        UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
+        eventRegistrationService.registerUserForEvent(eventId, userDTO.getUserId());
     }
 }
