@@ -69,6 +69,6 @@ public class DiscGolfEventsController {
                                      @PathVariable String eventId) {
         log.info("Starting registration on event {}", eventId);
         UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
-        eventRegistrationService.registerUserForEvent(eventId, userDTO.getUserId());
+        eventRegistrationService.registerUserForEvent(userDTO.getUserId(), eventId);
     }
 }
