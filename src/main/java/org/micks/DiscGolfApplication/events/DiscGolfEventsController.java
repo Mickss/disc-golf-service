@@ -71,4 +71,18 @@ public class DiscGolfEventsController {
         UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
         eventRegistrationService.registerUserForEvent(userDTO.getUserId(), eventId);
     }
+
+    @GetMapping("/my-events")
+    public ResponseEntity<List<String>> getMyEventIds(
+            @RequestHeader(value = "Authorization") String authorizationHeader) {
+        log.info("Fetching registered event IDs for user");
+        try {
+            UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
+            List<String> myEventIds = eventRegistrationService.getMyEvents(userDTO.getUserId());
+            return ResponseEntity.ok(myEventIds);
+        } catch (Exception e) {
+            log.error("Error fetching user's event IDs", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
