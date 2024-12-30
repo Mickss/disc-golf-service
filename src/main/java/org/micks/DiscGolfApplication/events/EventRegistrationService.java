@@ -34,24 +34,18 @@ public class EventRegistrationService {
     public List<String> getMyEvents(String userId) {
         log.info("Fetching event IDs for user: {}", userId);
         List<String> eventIds = new ArrayList<>();
-
         try (Connection connection = dbConnection.connect();
-             PreparedStatement statement = connection.prepareStatement(
-                     "SELECT event_id FROM user_event WHERE user_id = ?")) {
+             PreparedStatement statement = connection.prepareStatement("SELECT event_id FROM user_event WHERE user_id = ?")) {
             statement.setString(1, userId);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    String eventId = resultSet.getString("event_id");
-                    log.debug("Fetched event ID: {}", eventId);
-                    eventIds.add(eventId);
-                }
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String eventId = resultSet.getString("event_id");
+                log.debug("Fetched event ID: {}", eventId);
+                eventIds.add(eventId);
             }
         } catch (SQLException e) {
-            log.error("Error fetching event IDs for user: {}", userId, e);
             throw new RuntimeException("Error fetching user's event IDs", e);
         }
-
         log.info("Fetched event IDs for user {}: {}", userId, eventIds);
         return eventIds;
     }
