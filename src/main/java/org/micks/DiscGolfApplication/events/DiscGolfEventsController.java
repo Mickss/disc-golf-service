@@ -71,4 +71,11 @@ public class DiscGolfEventsController {
         UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
         eventRegistrationService.registerUserForEvent(userDTO.getUserId(), eventId);
     }
+
+    @GetMapping("/my-events")
+    public List<String> getMyEventIds(@RequestHeader(value = "Authorization") String authorizationHeader) {
+        log.info("Fetching registered event IDs for user");
+        UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
+        return eventRegistrationService.getMyEvents(userDTO.getUserId());
+    }
 }
