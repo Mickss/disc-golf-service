@@ -73,11 +73,9 @@ public class DiscGolfEventsController {
     }
 
     @GetMapping("/my-events")
-    public ResponseEntity<List<String>> getMyEventIds(
-            @RequestHeader(value = "Authorization") String authorizationHeader) {
+    public List<String> getMyEventIds(@RequestHeader(value = "Authorization") String authorizationHeader) {
         log.info("Fetching registered event IDs for user");
         UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
-        List<String> myEventIds = eventRegistrationService.getMyEvents(userDTO.getUserId());
-        return ResponseEntity.ok(myEventIds);
+        return eventRegistrationService.getMyEvents(userDTO.getUserId());
     }
 }
