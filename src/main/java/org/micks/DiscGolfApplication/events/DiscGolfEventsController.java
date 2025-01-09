@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -73,9 +74,12 @@ public class DiscGolfEventsController {
     }
 
     @GetMapping("/my-events")
-    public List<String> getMyEventIds(@RequestHeader(value = "Authorization") String authorizationHeader) {
-        log.info("Fetching registered event IDs for user");
-        UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
-        return eventRegistrationService.getMyEvents(userDTO.getUserId());
+    public List<String> getMyEventIds(@RequestHeader(value = "X-User-Id") String userIdHeader) {
+        log.info("Received X-User-Id header: {}", userIdHeader);
+        if (userIdHeader == null || userIdHeader.isEmpty()) {
+            log.warn("X-User-Id header is missing or empty in the request");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Id header is required");
+        }
+        return eventRegistrationService.getMyEvents(userIdHeader);
     }
 }
