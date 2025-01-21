@@ -31,22 +31,39 @@ public class EventRegistrationService {
         }
     }
 
-    public List<String> getMyEvents(String userId) {
-        log.info("Fetching event IDs for user: {}", userId);
-        List<String> eventIds = new ArrayList<>();
+    public List<DiscGolfEventDTO> getMyEventsWithDetails(String userId) {
+        log.info("Fetching event details for user: {}", userId);
+        List<DiscGolfEventDTO> events = new ArrayList<>();
+
+        String sql = """
+                    SELECT * 
+                    FROM user_event ue 
+                    JOIN Events e ON ue.event_id = e.id 
+                    WHERE ue.user_id = ?
+                """;
+
         try (Connection connection = dbConnection.connect();
-             PreparedStatement statement = connection.prepareStatement("SELECT event_id FROM user_event WHERE user_id = ?")) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, userId);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                String eventId = resultSet.getString("event_id");
-                log.debug("Fetched event ID: {}", eventId);
-                eventIds.add(eventId);
+                DiscGolfEventDTO event = new DiscGolfEventDTO(
+                        resultSet.getString("id"),
+                        resultSet.getDate("tournamentDate"),
+                        resultSet.getString("pdga"),
+                        resultSet.getString("tournamentTitle"),
+                        resultSet.getString("region"),
+                        resultSet.getString("registration"),
+                        resultSet.getString("vacancies")
+                );
+                log.debug("Fetched event: {}", event);
+                events.add(event);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error fetching user's event IDs", e);
+            log.error("Error fetching event details for user {}: {}", userId, e.getMessage());
+            throw new RuntimeException("Error fetching event details", e);
         }
-        log.info("Fetched event IDs for user {}: {}", userId, eventIds);
-        return eventIds;
+        log.info("Fetched {} events for user {}", events.size(), userId);
+        return events;
     }
 }

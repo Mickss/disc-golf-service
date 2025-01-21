@@ -74,12 +74,12 @@ public class DiscGolfEventsController {
     }
 
     @GetMapping("/my-events")
-    public List<String> getMyEventIds(@RequestHeader(value = "X-User-Id") String userIdHeader) {
+    public List<DiscGolfEventDTO> getMyEvents(@RequestHeader(value = "X-User-Id") String userIdHeader) {
         log.info("Received X-User-Id header: {}", userIdHeader);
         if (userIdHeader == null || userIdHeader.isEmpty()) {
             log.warn("X-User-Id header is missing or empty in the request");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Id header is required");
         }
-        return eventRegistrationService.getMyEvents(userIdHeader);
+        return eventRegistrationService.getMyEventsWithDetails(userIdHeader);
     }
 }
