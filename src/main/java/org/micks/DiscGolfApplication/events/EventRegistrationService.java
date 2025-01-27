@@ -31,6 +31,22 @@ public class EventRegistrationService {
         }
     }
 
+    public void unregisterUserFromEvent(String userId, String eventId) {
+        log.info("Unregistering user {} from event: {}", userId, eventId);
+        try (Connection connection = dbConnection.connect();
+             PreparedStatement statement = connection.prepareStatement("DELETE FROM user_event WHERE user_id = ? AND event_id = ?")) {
+            statement.setString(1, userId);
+            statement.setString(2, eventId);
+            int affectedRows = statement.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new RuntimeException("User was not registered for this event");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error unregistering user from event", e);
+        }
+    }
+
     public List<DiscGolfEventDTO> getMyEventsWithDetails(String userId) {
         log.info("Fetching event details for user: {}", userId);
         List<DiscGolfEventDTO> events = new ArrayList<>();
