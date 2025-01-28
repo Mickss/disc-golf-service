@@ -1,13 +1,13 @@
 package org.micks.DiscGolfApplication.events;
 
 import lombok.extern.slf4j.Slf4j;
-import org.micks.DiscGolfApplication.user.UserDTO;
 import org.micks.DiscGolfApplication.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,11 +66,25 @@ public class DiscGolfEventsController {
     }
 
     @PostMapping("/{eventId}/register")
-    public void registerUserForEvent(@RequestHeader(value = "Authorization") String authorizationHeader,
+    public void registerUserForEvent(@RequestHeader(value = "X-User-Id") String userIdHeader,
                                      @PathVariable String eventId) {
-        log.info("Starting registration on event {}", eventId);
-        UserDTO userDTO = userService.getLoggedInUser(authorizationHeader);
-        eventRegistrationService.registerUserForEvent(userDTO.getUserId(), eventId);
+        log.info("Starting registration on event {} for user {}", eventId, userIdHeader);
+        if (userIdHeader == null || userIdHeader.isEmpty()) {
+            log.warn("X-User-Id header is missing or empty in the request");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Id header is required");
+        }
+        eventRegistrationService.registerUserForEvent(userIdHeader, eventId);
+    }
+
+    @DeleteMapping("/{eventId}/unregister")
+    public void unregisterUserFromEvent(@RequestHeader(value = "X-User-Id") String userIdHeader,
+                                        @PathVariable String eventId) {
+        log.info("Starting unregistration from event {} for user {}", eventId, userIdHeader);
+        if (userIdHeader == null || userIdHeader.isEmpty()) {
+            log.warn("X-User-Id header is missing or empty in the request");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Id header is required");
+        }
+        eventRegistrationService.unregisterUserFromEvent(userIdHeader, eventId);
     }
 
     @GetMapping("/my-events")
