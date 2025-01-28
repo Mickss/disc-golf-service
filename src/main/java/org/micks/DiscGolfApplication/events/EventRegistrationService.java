@@ -2,6 +2,7 @@ package org.micks.DiscGolfApplication.events;
 
 import lombok.extern.slf4j.Slf4j;
 import org.micks.DiscGolfApplication.connection.DiscGolfDbConnection;
+import org.micks.DiscGolfApplication.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,8 +41,9 @@ public class EventRegistrationService {
             int affectedRows = statement.executeUpdate();
 
             if (affectedRows == 0) {
-                throw new RuntimeException("User was not registered for this event");
+                throw new BadRequestException("User was not registered for this event");
             }
+            log.info("Successfully unregistered user {} from event {}", userId, eventId);
         } catch (SQLException e) {
             throw new RuntimeException("Error unregistering user from event", e);
         }
