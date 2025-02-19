@@ -66,7 +66,7 @@ public class EventRegistrationService {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 DiscGolfEventDTO event = new DiscGolfEventDTO(
-                        resultSet.getString("id"),
+                        resultSet.getString("event_id"),
                         resultSet.getDate("tournamentDate"),
                         resultSet.getString("pdga"),
                         resultSet.getString("tournamentTitle"),
