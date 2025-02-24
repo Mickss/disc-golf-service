@@ -60,8 +60,18 @@ public class DiscGolfEventsController {
     }
 
     @PutMapping(value = "/{eventId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void editEvent(@PathVariable String eventId, @RequestBody DiscGolfEventDTO discGolfEventDTO) {
-        log.info("Received request for editing event for id: {}. Payload: {}", eventId, discGolfEventDTO);
+    public void editEvent(@RequestHeader(value = "X-User-Role") String userRoleHeader,
+                          @PathVariable() String eventId,
+                          @RequestBody DiscGolfEventDTO discGolfEventDTO) {
+        log.info("Received request for editing event for id: {} by user {}. Payload: {}", userRoleHeader, eventId, discGolfEventDTO);
+
+        if (userRoleHeader == null || userRoleHeader.isEmpty()) {
+            log.warn("X-User-Role header is missing or empty in the request");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Role header is required");
+        }
+        if (!userRoleHeader.equals("ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid role: " + userRoleHeader);
+        }
         discGolfEventService.editEvents(eventId, discGolfEventDTO);
     }
 
