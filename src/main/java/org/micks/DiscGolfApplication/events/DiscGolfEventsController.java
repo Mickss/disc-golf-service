@@ -44,10 +44,15 @@ public class DiscGolfEventsController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> createEvent(@RequestBody DiscGolfEventDTO discGolfEventDTO,
-                                            @RequestHeader(value = "Authorization") String token) {
+                                            @RequestHeader(value = "X-User-Role") String userRoleHeader) {
         log.info("Received request for creating new event: {}", discGolfEventDTO);
-        if (!userService.isUserAdmin(token)) {
-            log.warn("User with token {} is not an admin", token);
+
+        if (userRoleHeader == null || userRoleHeader.isEmpty()) {
+            log.warn("X-User-Role header is missing or empty in the request");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        if (!userRoleHeader.equals("ADMIN")) {
+            log.warn("User with role {} is not authorized to create an event", userRoleHeader);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         discGolfEventService.createEvent(discGolfEventDTO);
