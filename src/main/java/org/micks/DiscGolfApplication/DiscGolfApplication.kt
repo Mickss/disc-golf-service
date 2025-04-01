@@ -1,33 +1,28 @@
-package org.micks.DiscGolfApplication;
+package org.micks.DiscGolfApplication
 
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.micks.DiscGolfApplication.connection.DatabaseConfigProperties;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import jakarta.annotation.PostConstruct
+import org.micks.DiscGolfApplication.connection.DatabaseConfigProperties
+import org.micks.DiscGolfApplication.util.logger
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.runApplication
 
 @SpringBootApplication
-@Slf4j
-public class DiscGolfApplication {
-
-    @Autowired
-    private DatabaseConfigProperties databaseConfigProperties;
-
-    public static void main(String[] args) {
-        SpringApplication.run(DiscGolfApplication.class, args);
-    }
+class DiscGolfApplication(private val databaseConfigProperties: DatabaseConfigProperties) {
+    private val log = logger()
 
     @PostConstruct
-    public void init() {
-        checkDatabaseConnection();
+    fun init() {
+        checkDatabaseConnection()
     }
 
-    private void checkDatabaseConnection() {
-        if (databaseConfigProperties.getName() == null) {
-            throw new IllegalStateException("Cannot read database configuration");
-        } else {
-            log.info("Database configuration OK. Using database: {}", databaseConfigProperties.getName());
+    fun checkDatabaseConnection() {
+        if (databaseConfigProperties.name == null) {
+            throw IllegalStateException("Cannot read database configuration")
         }
+        log.info("Database configuration OK. Using database: {}", databaseConfigProperties.name)
     }
+}
+
+fun main(args: Array<String>) {
+    runApplication<DiscGolfApplication>(*args)
 }
