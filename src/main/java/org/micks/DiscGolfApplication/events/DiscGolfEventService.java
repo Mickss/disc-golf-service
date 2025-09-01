@@ -126,4 +126,52 @@ public class DiscGolfEventService {
             throw new RuntimeException("Error while editing event with id: " + eventId, e);
         }
     }
+
+    public void deleteEvent(String eventId) {
+        log.info("Deleting event with id: {}", eventId);
+        try (Connection connection = dbConnection.connect()) {
+            connection.setAutoCommit(false);
+
+            validateEventExists(connection, eventId);
+            deleteUserEvents(connection, eventId);
+            deleteEventRecord(connection, eventId);
+
+            connection.commit();
+        } catch (SQLException e) {
+            log.error("Error while deleting event with id: {}", eventId, e);
+            throw new RuntimeException("Error while deleting event with id: " + eventId, e);
+        }
+    }
+
+    private void validateEventExists(Connection connection, String eventId) throws SQLException {
+        try (PreparedStatement checkStatement = connection.prepareStatement(
+                "SELECT COUNT(*) FROM Events WHERE id = ?")) {
+            checkStatement.setString(1, eventId);
+            ResultSet rs = checkStatement.executeQuery();
+            if (rs.next() && rs.getInt(1) == 0) {
+                throw new IllegalArgumentException("Event with id " + eventId + " not found");
+            }
+        }
+    }
+
+    private void deleteUserEvents(Connection connection, String eventId) throws SQLException {
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "DELETE FROM user_event WHERE event_id = ?")) {
+            stmt.setString(1, eventId);
+            int deleted = stmt.executeUpdate();
+            log.info("Deleted {} user registrations for event {}", deleted, eventId);
+        }
+    }
+
+    private void deleteEventRecord(Connection connection, String eventId) throws SQLException {
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "DELETE FROM Events WHERE id = ?")) {
+            stmt.setString(1, eventId);
+            int deleted = stmt.executeUpdate();
+            if (deleted == 0) {
+                throw new IllegalStateException("Failed to delete event with id: " + eventId);
+            }
+            log.info("Successfully deleted event with id: {}", eventId);
+        }
+    }
 }
