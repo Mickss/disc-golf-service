@@ -6,17 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -56,6 +46,23 @@ public class DiscGolfEventsController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         discGolfEventService.createEvent(discGolfEventDTO);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<Void> deleteEvent(@RequestHeader(value = "X-User-Role") String userRoleHeader,
+                                            @PathVariable String eventId) {
+        log.info("Received request to delete event: {} by user role: {}", eventId, userRoleHeader);
+
+        if (userRoleHeader == null || userRoleHeader.isEmpty()) {
+            log.warn("X-User-Role header is missing or empty in the request");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Role header is required");
+        }
+        if (!userRoleHeader.equals("ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin role required");
+        }
+
+        discGolfEventService.deleteEvent(eventId);
         return ResponseEntity.ok().build();
     }
 

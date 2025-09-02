@@ -36,7 +36,7 @@ public class DiscGolfEventService {
 
     public List<DiscGolfEventDTO> getEvents(String valueToOrderBy, OrderDirection orderDirection) {
         try (Connection connection = dbConnection.connect()) {
-            String query = "SELECT * FROM Events";
+            String query = "SELECT * FROM Events WHERE status != 'DELETED'";
             if (valueToOrderBy != null) {
                 if (!allowedColumnNames.contains(valueToOrderBy)) {
                     throw new BadRequestException("Incorrect order column name: " + valueToOrderBy);
@@ -70,7 +70,7 @@ public class DiscGolfEventService {
     public void createEvent(DiscGolfEventDTO discGolfEventDTO) {
         log.info("Creating new event: {}", discGolfEventDTO.getTournamentTitle());
         try (Connection connection = dbConnection.connect()) {
-            PreparedStatement statement = connection.prepareStatement("insert into Events values(UUID(),?,?,?,?,?,?)");
+            PreparedStatement statement = connection.prepareStatement("insert into Events values(UUID(),?,?,?,?,?,?, 'ACTIVE')");
             statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
             statement.setString(2, discGolfEventDTO.getPdga());
             statement.setString(3, discGolfEventDTO.getTournamentTitle());
@@ -86,7 +86,8 @@ public class DiscGolfEventService {
 
     public DiscGolfEventDTO getEvent(String eventId) {
         try (Connection connection = dbConnection.connect()) {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM Events WHERE ID = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM Events WHERE ID = ? AND status != 'DELETED'");
             statement.setString(1, eventId);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
@@ -112,8 +113,8 @@ public class DiscGolfEventService {
     public void editEvents(String eventId, DiscGolfEventDTO discGolfEventDTO) {
         log.info("Editing event with id: {}", eventId);
         try (Connection connection = dbConnection.connect()) {
-            PreparedStatement statement = connection.prepareStatement
-                    ("UPDATE Events SET tournamentDate = ?, pdga = ?, tournamentTitle = ?, region = ?, registration = ? WHERE id = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE Events SET tournamentDate = ?, pdga = ?, tournamentTitle = ?, region = ?, registration = ? WHERE id = ? AND status != 'DELETED'");
             statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
             statement.setString(2, discGolfEventDTO.getPdga());
             statement.setString(3, discGolfEventDTO.getTournamentTitle());
@@ -124,6 +125,76 @@ public class DiscGolfEventService {
             statement.close();
         } catch (SQLException e) {
             throw new RuntimeException("Error while editing event with id: " + eventId, e);
+        }
+    }
+
+    public void deleteEvent(String eventId) {
+        log.info("Soft deleting event with id: {}", eventId);
+
+        Connection connection = null;
+        try {
+            connection = dbConnection.connect();
+            connection.setAutoCommit(false);
+
+            validateEventExists(connection, eventId);
+            deactivateUserEvents(connection, eventId);
+            markEventAsDeleted(connection, eventId);
+
+            connection.commit();
+            log.info("Successfully soft deleted event with id: {}", eventId);
+
+        } catch (SQLException e) {
+            log.error("Error while soft deleting event with id: {}", eventId, e);
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                    log.info("Transaction rolled back for event: {}", eventId);
+                } catch (SQLException rollbackException) {
+                    log.error("Error during rollback for event: {}", eventId, rollbackException);
+                }
+            }
+            throw new RuntimeException("Error while soft deleting event with id: " + eventId, e);
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                } catch (SQLException e) {
+                    log.error("Error while closing connection", e);
+                }
+            }
+        }
+    }
+
+    private void validateEventExists(Connection connection, String eventId) throws SQLException {
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT COUNT(*) FROM Events WHERE id = ? AND status != 'DELETED'")) {
+            stmt.setString(1, eventId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next() && rs.getInt(1) == 0) {
+                throw new IllegalArgumentException("Event with id " + eventId + " not found or already deleted");
+            }
+        }
+    }
+
+    private void deactivateUserEvents(Connection connection, String eventId) throws SQLException {
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "UPDATE user_event SET active = false WHERE event_id = ?")) {
+            stmt.setString(1, eventId);
+            int updated = stmt.executeUpdate();
+            log.info("Deactivated {} user registrations for event {}", updated, eventId);
+        }
+    }
+
+    private void markEventAsDeleted(Connection connection, String eventId) throws SQLException {
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "UPDATE Events SET status = 'DELETED' WHERE id = ?")) {
+            stmt.setString(1, eventId);
+            int updated = stmt.executeUpdate();
+            if (updated == 0) {
+                throw new IllegalStateException("Failed to mark event as deleted: " + eventId);
+            }
+            log.info("Event {} marked as DELETED", eventId);
         }
     }
 }

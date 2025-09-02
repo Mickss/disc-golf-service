@@ -54,10 +54,13 @@ public class EventRegistrationService {
         List<DiscGolfEventDTO> events = new ArrayList<>();
 
         String sql = """
-                    SELECT * 
+                    SELECT e.id, e.tournamentDate, e.pdga, e.tournamentTitle, e.region, e.registration, e.vacancies 
                     FROM user_event ue 
                     JOIN Events e ON ue.event_id = e.id 
-                    WHERE ue.user_id = ?
+                    WHERE ue.user_id = ? 
+                    AND ue.active = true 
+                    AND e.status != 'DELETED'
+                    ORDER BY e.tournamentDate
                 """;
 
         try (Connection connection = dbConnection.connect();
@@ -66,7 +69,7 @@ public class EventRegistrationService {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 DiscGolfEventDTO event = new DiscGolfEventDTO(
-                        resultSet.getString("event_id"),
+                        resultSet.getString("id"),
                         resultSet.getDate("tournamentDate"),
                         resultSet.getString("pdga"),
                         resultSet.getString("tournamentTitle"),
