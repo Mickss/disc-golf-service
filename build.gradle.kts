@@ -17,6 +17,8 @@ java {
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
+    maven("https://repo.spring.io/milestone")
 }
 
 dependencies {
@@ -24,6 +26,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.apache.poi:poi:5.3.0")
+    implementation("org.apache.poi:poi-ooxml:5.3.0")
+    implementation("com.opencsv:opencsv:5.9")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
