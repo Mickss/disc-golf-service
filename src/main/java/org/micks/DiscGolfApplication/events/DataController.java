@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
 @RequestMapping("/export")
@@ -20,7 +21,7 @@ public class DataController {
     }
 
     @GetMapping("/events")
-    public ResponseEntity<byte[]> exportEvents(
+    public ResponseEntity<StreamingResponseBody> exportEvents(
             @RequestHeader(value = "X-User-Role") String userRoleHeader) {
 
         log.info("Export events requested by user with role: {}", userRoleHeader);
@@ -35,10 +36,14 @@ public class DataController {
         }
 
         byte[] excelFile = discGolfDataService.generateEventsExcel();
+        StreamingResponseBody stream = out -> {
+            out.write(excelFile);
+            out.flush();
+        };
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=events.xlsx")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(excelFile);
+                .body(stream);
     }
 }
