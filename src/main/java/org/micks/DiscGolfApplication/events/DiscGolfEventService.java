@@ -197,4 +197,47 @@ public class DiscGolfEventService {
             log.info("Event {} marked as DELETED", eventId);
         }
     }
+    public boolean eventExistsByTitle(String tournamentTitle) {
+        try (Connection connection = dbConnection.connect()) {
+            String query = "SELECT COUNT(*) FROM Events WHERE tournamentTitle = ? AND status != 'DELETED'";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, tournamentTitle);
+
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0;
+            }
+            return false;
+        } catch (SQLException e) {
+            log.error("Error checking if event exists: {}", tournamentTitle, e);
+            return false;
+        }
+    }
+
+    public void updateEventByTitle(String tournamentTitle, DiscGolfEventDTO event) {
+        try (Connection connection = dbConnection.connect()) {
+            String query = "UPDATE Events SET " +
+                    "tournamentDate = ?, " +
+                    "pdga = ?, " +
+                    "region = ?, " +
+                    "registration = ?, " +
+                    "vacancies = ? " +
+                    "WHERE tournamentTitle = ? AND status != 'DELETED'";
+
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setDate(1, new java.sql.Date(event.getTournamentDate().getTime()));
+            stmt.setString(2, event.getPdga());
+            stmt.setString(3, event.getRegion());
+            stmt.setString(4, event.getRegistration());
+            stmt.setString(5, event.getVacancies());
+            stmt.setString(6, tournamentTitle);
+
+            stmt.executeUpdate();
+            log.info("Updated event: {}", tournamentTitle);
+
+        } catch (SQLException e) {
+            log.error("Error updating event: {}", tournamentTitle, e);
+            throw new RuntimeException("Failed to update event", e);
+        }
+    }
 }

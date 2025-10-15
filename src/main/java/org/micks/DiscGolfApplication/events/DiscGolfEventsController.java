@@ -12,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -169,10 +171,10 @@ public class DiscGolfEventsController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        try {
-            discGolfDataService.importEventsExcel(file);
+        try (InputStream is = file.getInputStream()) {
+            discGolfDataService.importEventsExcel(is);
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Failed to import events", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
