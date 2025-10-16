@@ -1,14 +1,17 @@
 package org.micks.DiscGolfApplication.events;
 
 import lombok.extern.slf4j.Slf4j;
-import org.micks.DiscGolfApplication.user.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -17,14 +20,18 @@ import java.util.List;
 @Slf4j
 public class DiscGolfEventsController {
 
-    @Autowired
-    private DiscGolfEventService discGolfEventService;
+    private final DiscGolfDataService discGolfDataService;
+    private final DiscGolfEventService discGolfEventService;
+    private final EventRegistrationService eventRegistrationService;
 
-    @Autowired
-    private EventRegistrationService eventRegistrationService;
-
-    @Autowired
-    private UserService userService;
+    public DiscGolfEventsController(DiscGolfDataService discGolfDataService,
+                                    DiscGolfEventService discGolfEventService,
+                                    EventRegistrationService eventRegistrationService
+    ) {
+        this.discGolfDataService = discGolfDataService;
+        this.discGolfEventService = discGolfEventService;
+        this.eventRegistrationService = eventRegistrationService;
+    }
 
     @GetMapping
     public List<DiscGolfEventDTO> getEvents(@RequestParam(required = false) String valueToOrderBy,
@@ -117,5 +124,55 @@ public class DiscGolfEventsController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Id header is required");
         }
         return eventRegistrationService.getMyEventsWithDetails(userIdHeader);
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<StreamingResponseBody> exportEvents(
+            @RequestHeader(value = "X-User-Role") String userRoleHeader) {
+
+        log.info("Export events requested by user with role: {}", userRoleHeader);
+
+        if (userRoleHeader == null || userRoleHeader.isEmpty()) {
+            log.warn("X-User-Role header is missing or empty in the request");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        if (!userRoleHeader.equals("ADMIN")) {
+            log.warn("User with role {} is not authorized to export events", userRoleHeader);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        byte[] excelFile = discGolfDataService.generateEventsExcel();
+        StreamingResponseBody stream = out -> {
+            out.write(excelFile);
+            out.flush();
+        };
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=events.xlsx")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(stream);
+    }
+
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> importEvents(
+            @RequestHeader(value = "X-User-Role") String userRoleHeader,
+            @RequestParam("file") MultipartFile file) {
+
+        log.info("Import events requested by user with role: {}", userRoleHeader);
+
+        if (userRoleHeader == null || userRoleHeader.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        if (!userRoleHeader.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try (InputStream is = file.getInputStream()) {
+            discGolfDataService.importEventsExcel(is);
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            log.error("Failed to import events", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
