@@ -197,6 +197,7 @@ public class DiscGolfEventService {
             log.info("Event {} marked as DELETED", eventId);
         }
     }
+
     public boolean eventExistsByTitle(String tournamentTitle) {
         try (Connection connection = dbConnection.connect()) {
             String query = "SELECT COUNT(*) FROM Events WHERE tournamentTitle = ? AND status != 'DELETED'";
@@ -210,7 +211,7 @@ public class DiscGolfEventService {
             return false;
         } catch (SQLException e) {
             log.error("Error checking if event exists: {}", tournamentTitle, e);
-            return false;
+            throw new IllegalStateException("Error checking if event exists: " + tournamentTitle, e);
         }
     }
 

@@ -1,8 +1,6 @@
 package org.micks.DiscGolfApplication.events;
 
 import lombok.extern.slf4j.Slf4j;
-import org.micks.DiscGolfApplication.user.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,19 +21,17 @@ import java.util.List;
 public class DiscGolfEventsController {
 
     private final DiscGolfDataService discGolfDataService;
+    private final DiscGolfEventService discGolfEventService;
+    private final EventRegistrationService eventRegistrationService;
 
-    public DiscGolfEventsController(DiscGolfDataService discGolfDataService) {
+    public DiscGolfEventsController(DiscGolfDataService discGolfDataService,
+                                    DiscGolfEventService discGolfEventService,
+                                    EventRegistrationService eventRegistrationService
+    ) {
         this.discGolfDataService = discGolfDataService;
+        this.discGolfEventService = discGolfEventService;
+        this.eventRegistrationService = eventRegistrationService;
     }
-
-    @Autowired
-    private DiscGolfEventService discGolfEventService;
-
-    @Autowired
-    private EventRegistrationService eventRegistrationService;
-
-    @Autowired
-    private UserService userService;
 
     @GetMapping
     public List<DiscGolfEventDTO> getEvents(@RequestParam(required = false) String valueToOrderBy,
