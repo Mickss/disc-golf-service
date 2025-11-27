@@ -101,8 +101,8 @@ public class DiscGolfEventService {
                         resultSet.getDate("tournamentDate"),
                         resultSet.getDate("registrationStart"),
                         resultSet.getDate("registrationEnd"),
-                        resultSet.getString("tournamentTitle"),
                         resultSet.getString("pdga"),
+                        resultSet.getString("tournamentTitle"),
                         resultSet.getString("region"),
                         resultSet.getString("externalLink")
                 );
@@ -120,10 +120,18 @@ public class DiscGolfEventService {
         log.info("Editing event with id: {}", eventId);
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement(
-                    "UPDATE Events SET tournamentDate = ?, registrationStart = ?, registrationEnd = ?, pdga = ?, tournamentTitle = ?, region = ?, externalLink = ? WHERE id = ? AND status != 'DELETED'");
-            statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
-            statement.setString(2, DATE_FORMAT.format(discGolfEventDTO.getRegistrationStart()));
-            statement.setString(3, DATE_FORMAT.format(discGolfEventDTO.getRegistrationEnd()));
+                    "UPDATE Events SET " +
+                            "tournamentDate = ?, " +
+                            "registrationStart = ?, " +
+                            "registrationEnd = ?, " +
+                            "pdga = ?, " +
+                            "tournamentTitle = ?, " +
+                            "region = ?, " +
+                            "externalLink = ? " +
+                            "WHERE id = ? AND status != 'DELETED'");
+            statement.setString(1, safeFormat(discGolfEventDTO.getTournamentDate()));
+            statement.setString(2, safeFormat(discGolfEventDTO.getRegistrationStart()));
+            statement.setString(3, safeFormat(discGolfEventDTO.getRegistrationEnd()));
             statement.setString(4, discGolfEventDTO.getPdga());
             statement.setString(5, discGolfEventDTO.getTournamentTitle());
             statement.setString(6, discGolfEventDTO.getRegion());

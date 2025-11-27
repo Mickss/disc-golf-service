@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.micks.DiscGolfApplication.exceptions.ImportException;
 import org.springframework.stereotype.Service;
+import static org.apache.poi.ss.usermodel.CellType.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -123,11 +124,11 @@ public class DiscGolfDataService {
     }
 
     private Date getCellValueAsDate(Cell cell) {
-        if (cell == null || cell.getCellType() == org.apache.poi.ss.usermodel.CellType.BLANK) {
+        if (cell == null || cell.getCellType() == BLANK) {
             return null;
         }
 
-        if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
+        if (cell.getCellType() == NUMERIC) {
             return cell.getDateCellValue();
         }
 
