@@ -54,7 +54,7 @@ public class EventRegistrationService {
         List<DiscGolfEventDTO> events = new ArrayList<>();
 
         String sql = """
-                    SELECT e.id, e.tournamentDate, e.pdga, e.tournamentTitle, e.region, e.registration, e.vacancies 
+                    SELECT e.id, e.tournamentDate, e.registrationStart, e.registrationEnd, e.pdga, e.tournamentTitle, e.region, e.externalLink
                     FROM user_event ue 
                     JOIN Events e ON ue.event_id = e.id 
                     WHERE ue.user_id = ? 
@@ -71,11 +71,12 @@ public class EventRegistrationService {
                 DiscGolfEventDTO event = new DiscGolfEventDTO(
                         resultSet.getString("id"),
                         resultSet.getDate("tournamentDate"),
+                        resultSet.getDate("registrationStart"),
+                        resultSet.getDate("registrationEnd"),
                         resultSet.getString("pdga"),
                         resultSet.getString("tournamentTitle"),
                         resultSet.getString("region"),
-                        resultSet.getString("registration"),
-                        resultSet.getString("vacancies")
+                        resultSet.getString("externalLink")
                 );
                 log.debug("Fetched event: {}", event);
                 events.add(event);

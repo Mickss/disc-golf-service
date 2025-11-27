@@ -12,9 +12,10 @@ import java.util.Date;
 public class DiscGolfEventDTO {
     private String id;
     private Date tournamentDate;
+    private Date registrationStart;
+    private Date registrationEnd;
     private String pdga;
     private String tournamentTitle;
     private String region;
-    private String registration;
-    private String vacancies;
+    private String externalLink;
 }
