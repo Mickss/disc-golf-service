@@ -23,6 +23,9 @@ import java.util.List;
 public class DiscGolfEventService {
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private String safeFormat(java.util.Date date) {
+        return date != null ? DATE_FORMAT.format(date) : null;
+    }
 
     @Autowired
     private DiscGolfDbConnection dbConnection;
@@ -53,11 +56,12 @@ public class DiscGolfEventService {
                 DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
                         resultSet.getString("id"),
                         resultSet.getDate("tournamentDate"),
+                        resultSet.getDate("registrationStart"),
+                        resultSet.getDate("registrationEnd"),
                         resultSet.getString("pdga"),
                         resultSet.getString("tournamentTitle"),
                         resultSet.getString("region"),
-                        resultSet.getString("registration"),
-                        resultSet.getString("vacancies")
+                        resultSet.getString("externalLink")
                 );
                 discGolfEventDTOList.add(discGolfEventDTO);
             }
@@ -70,13 +74,14 @@ public class DiscGolfEventService {
     public void createEvent(DiscGolfEventDTO discGolfEventDTO) {
         log.info("Creating new event: {}", discGolfEventDTO.getTournamentTitle());
         try (Connection connection = dbConnection.connect()) {
-            PreparedStatement statement = connection.prepareStatement("insert into Events values(UUID(),?,?,?,?,?,?, 'ACTIVE')");
-            statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
-            statement.setString(2, discGolfEventDTO.getPdga());
-            statement.setString(3, discGolfEventDTO.getTournamentTitle());
-            statement.setString(4, discGolfEventDTO.getRegion());
-            statement.setString(5, discGolfEventDTO.getRegistration());
-            statement.setString(6, discGolfEventDTO.getVacancies());
+            PreparedStatement statement = connection.prepareStatement("insert into Events values(UUID(),?,?,?,?,?,?,?, 'ACTIVE')");
+            statement.setString(1, safeFormat(discGolfEventDTO.getTournamentDate()));
+            statement.setString(2, safeFormat(discGolfEventDTO.getRegistrationStart()));
+            statement.setString(3, safeFormat(discGolfEventDTO.getRegistrationEnd()));
+            statement.setString(4, discGolfEventDTO.getPdga());
+            statement.setString(5, discGolfEventDTO.getTournamentTitle());
+            statement.setString(6, discGolfEventDTO.getRegion());
+            statement.setString(7, discGolfEventDTO.getExternalLink());
             statement.execute();
             statement.close();
         } catch (SQLException e) {
@@ -94,11 +99,12 @@ public class DiscGolfEventService {
                 DiscGolfEventDTO discGolfEventDTO = new DiscGolfEventDTO(
                         resultSet.getString("id"),
                         resultSet.getDate("tournamentDate"),
-                        resultSet.getString("pdga"),
+                        resultSet.getDate("registrationStart"),
+                        resultSet.getDate("registrationEnd"),
                         resultSet.getString("tournamentTitle"),
+                        resultSet.getString("pdga"),
                         resultSet.getString("region"),
-                        resultSet.getString("registration"),
-                        resultSet.getString("vacancies")
+                        resultSet.getString("externalLink")
                 );
                 statement.close();
                 return discGolfEventDTO;
@@ -114,13 +120,15 @@ public class DiscGolfEventService {
         log.info("Editing event with id: {}", eventId);
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement(
-                    "UPDATE Events SET tournamentDate = ?, pdga = ?, tournamentTitle = ?, region = ?, registration = ? WHERE id = ? AND status != 'DELETED'");
+                    "UPDATE Events SET tournamentDate = ?, registrationStart = ?, registrationEnd = ?, pdga = ?, tournamentTitle = ?, region = ?, externalLink = ? WHERE id = ? AND status != 'DELETED'");
             statement.setString(1, DATE_FORMAT.format(discGolfEventDTO.getTournamentDate()));
-            statement.setString(2, discGolfEventDTO.getPdga());
-            statement.setString(3, discGolfEventDTO.getTournamentTitle());
-            statement.setString(4, discGolfEventDTO.getRegion());
-            statement.setString(5, discGolfEventDTO.getRegistration());
-            statement.setString(6, eventId);
+            statement.setString(2, DATE_FORMAT.format(discGolfEventDTO.getRegistrationStart()));
+            statement.setString(3, DATE_FORMAT.format(discGolfEventDTO.getRegistrationEnd()));
+            statement.setString(4, discGolfEventDTO.getPdga());
+            statement.setString(5, discGolfEventDTO.getTournamentTitle());
+            statement.setString(6, discGolfEventDTO.getRegion());
+            statement.setString(7, discGolfEventDTO.getExternalLink());
+            statement.setString(8, eventId);
             statement.execute();
             statement.close();
         } catch (SQLException e) {
@@ -219,19 +227,21 @@ public class DiscGolfEventService {
         try (Connection connection = dbConnection.connect()) {
             String query = "UPDATE Events SET " +
                     "tournamentDate = ?, " +
+                    "registrationStart = ?, " +
+                    "registrationEnd = ?, " +
                     "pdga = ?, " +
                     "region = ?, " +
-                    "registration = ?, " +
-                    "vacancies = ? " +
+                    "externalLink = ? " +
                     "WHERE tournamentTitle = ? AND status != 'DELETED'";
 
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setDate(1, new java.sql.Date(event.getTournamentDate().getTime()));
-            stmt.setString(2, event.getPdga());
-            stmt.setString(3, event.getRegion());
-            stmt.setString(4, event.getRegistration());
-            stmt.setString(5, event.getVacancies());
-            stmt.setString(6, tournamentTitle);
+            stmt.setDate(2, new java.sql.Date(event.getRegistrationStart().getTime()));
+            stmt.setDate(3, new java.sql.Date(event.getRegistrationEnd().getTime()));
+            stmt.setString(4, event.getPdga());
+            stmt.setString(5, event.getRegion());
+            stmt.setString(6, event.getExternalLink());
+            stmt.setString(7, tournamentTitle);
 
             stmt.executeUpdate();
             log.info("Updated event: {}", tournamentTitle);
