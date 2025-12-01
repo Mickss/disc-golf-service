@@ -16,6 +16,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -243,9 +244,11 @@ public class DiscGolfEventService {
                     "WHERE tournamentTitle = ? AND status != 'DELETED'";
 
             PreparedStatement stmt = connection.prepareStatement(query);
-            stmt.setDate(1, new java.sql.Date(event.getTournamentDate().getTime()));
-            stmt.setDate(2, new java.sql.Date(event.getRegistrationStart().getTime()));
-            stmt.setDate(3, new java.sql.Date(event.getRegistrationEnd().getTime()));
+
+            setDateParameter(stmt, 1, event.getTournamentDate());
+            setDateParameter(stmt, 2, event.getRegistrationStart());
+            setDateParameter(stmt, 3, event.getRegistrationEnd());
+
             stmt.setString(4, event.getPdga());
             stmt.setString(5, event.getRegion());
             stmt.setString(6, event.getExternalLink());
@@ -257,6 +260,14 @@ public class DiscGolfEventService {
         } catch (SQLException e) {
             log.error("Error updating event: {}", tournamentTitle, e);
             throw new RuntimeException("Failed to update event", e);
+        }
+    }
+
+    private void setDateParameter(PreparedStatement stmt, int parameterIndex, Date date) throws SQLException {
+        if (date != null) {
+            stmt.setDate(parameterIndex, new java.sql.Date(date.getTime()));
+        } else {
+            stmt.setNull(parameterIndex, java.sql.Types.DATE);
         }
     }
 }
