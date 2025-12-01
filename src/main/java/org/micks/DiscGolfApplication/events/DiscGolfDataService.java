@@ -43,7 +43,7 @@ public class DiscGolfDataService {
             int rowIdx = 1;
             for (DiscGolfEventDTO event : events) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(event.getId() != null ? event.getId() : "");
+                row.createCell(0).setCellValue(event.getId());
                 row.createCell(1).setCellValue(event.getTournamentDate() != null ? event.getTournamentDate().toString() : "");
                 row.createCell(2).setCellValue(event.getRegistrationStart() != null ? event.getRegistrationStart().toString() : "");
                 row.createCell(3).setCellValue(event.getRegistrationEnd() != null ? event.getRegistrationEnd().toString() : "");
