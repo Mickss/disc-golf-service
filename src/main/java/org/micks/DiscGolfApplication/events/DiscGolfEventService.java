@@ -40,7 +40,7 @@ public class DiscGolfEventService {
 
     public List<DiscGolfEventDTO> getEvents(String valueToOrderBy, OrderDirection orderDirection) {
         try (Connection connection = dbConnection.connect()) {
-            String query = "SELECT * FROM Events WHERE status != 'DELETED'";
+            String query = "SELECT * FROM events WHERE status != 'DELETED'";
             if (valueToOrderBy != null) {
                 if (!allowedColumnNames.contains(valueToOrderBy)) {
                     throw new BadRequestException("Incorrect order column name: " + valueToOrderBy);
@@ -75,7 +75,7 @@ public class DiscGolfEventService {
     public void createEvent(DiscGolfEventDTO discGolfEventDTO) {
         log.info("Creating new event: {}", discGolfEventDTO.getTournamentTitle());
         try (Connection connection = dbConnection.connect()) {
-            PreparedStatement statement = connection.prepareStatement("insert into Events values(UUID(),?,?,?,?,?,?,?, 'ACTIVE')");
+            PreparedStatement statement = connection.prepareStatement("insert into events values(UUID(),?,?,?,?,?,?,?, 'ACTIVE')");
             statement.setString(1, safeFormat(discGolfEventDTO.getTournamentDate()));
             statement.setString(2, safeFormat(discGolfEventDTO.getRegistrationStart()));
             statement.setString(3, safeFormat(discGolfEventDTO.getRegistrationEnd()));
@@ -93,7 +93,7 @@ public class DiscGolfEventService {
     public DiscGolfEventDTO getEvent(String eventId) {
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement(
-                    "SELECT * FROM Events WHERE ID = ? AND status != 'DELETED'");
+                    "SELECT * FROM events WHERE ID = ? AND status != 'DELETED'");
             statement.setString(1, eventId);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
@@ -121,7 +121,7 @@ public class DiscGolfEventService {
         log.info("Editing event with id: {}", eventId);
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement(
-                    "UPDATE Events SET " +
+                    "UPDATE events SET " +
                             "tournamentDate = ?, " +
                             "registrationStart = ?, " +
                             "registrationEnd = ?, " +
@@ -185,7 +185,7 @@ public class DiscGolfEventService {
 
     private void validateEventExists(Connection connection, String eventId) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT COUNT(*) FROM Events WHERE id = ? AND status != 'DELETED'")) {
+                "SELECT COUNT(*) FROM events WHERE id = ? AND status != 'DELETED'")) {
             stmt.setString(1, eventId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) == 0) {
@@ -205,7 +205,7 @@ public class DiscGolfEventService {
 
     private void markEventAsDeleted(Connection connection, String eventId) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "UPDATE Events SET status = 'DELETED' WHERE id = ?")) {
+                "UPDATE events SET status = 'DELETED' WHERE id = ?")) {
             stmt.setString(1, eventId);
             int updated = stmt.executeUpdate();
             if (updated == 0) {
@@ -217,7 +217,7 @@ public class DiscGolfEventService {
 
     public boolean eventExistsByTitle(String tournamentTitle) {
         try (Connection connection = dbConnection.connect()) {
-            String query = "SELECT COUNT(*) FROM Events WHERE tournamentTitle = ? AND status != 'DELETED'";
+            String query = "SELECT COUNT(*) FROM events WHERE tournamentTitle = ? AND status != 'DELETED'";
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setString(1, tournamentTitle);
 
@@ -234,7 +234,7 @@ public class DiscGolfEventService {
 
     public void updateEventByTitle(String tournamentTitle, DiscGolfEventDTO event) {
         try (Connection connection = dbConnection.connect()) {
-            String query = "UPDATE Events SET " +
+            String query = "UPDATE events SET " +
                     "tournamentDate = ?, " +
                     "registrationStart = ?, " +
                     "registrationEnd = ?, " +

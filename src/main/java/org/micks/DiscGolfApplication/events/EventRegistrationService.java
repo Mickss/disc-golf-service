@@ -56,7 +56,7 @@ public class EventRegistrationService {
         String sql = """
                     SELECT e.id, e.tournamentDate, e.registrationStart, e.registrationEnd, e.pdga, e.tournamentTitle, e.region, e.externalLink
                     FROM user_event ue 
-                    JOIN Events e ON ue.event_id = e.id 
+                    JOIN events e ON ue.event_id = e.id 
                     WHERE ue.user_id = ? 
                     AND ue.active = true 
                     AND e.status != 'DELETED'
