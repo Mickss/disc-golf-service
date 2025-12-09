@@ -154,7 +154,6 @@ public class DiscGolfEventService {
             connection.setAutoCommit(false);
 
             validateEventExists(connection, eventId);
-            deactivateUserEvents(connection, eventId);
             markEventAsDeleted(connection, eventId);
 
             connection.commit();
