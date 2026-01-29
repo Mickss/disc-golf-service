@@ -24,6 +24,7 @@ import java.util.List;
 public class DiscGolfEventService {
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
     private String safeFormat(java.util.Date date) {
         return date != null ? DATE_FORMAT.format(date) : null;
     }
@@ -75,7 +76,9 @@ public class DiscGolfEventService {
     public void createEvent(DiscGolfEventDTO discGolfEventDTO) {
         log.info("Creating new event: {}", discGolfEventDTO.getTournamentTitle());
         try (Connection connection = dbConnection.connect()) {
-            PreparedStatement statement = connection.prepareStatement("insert into events values(UUID(),?,?,?,?,?,?,?, 'ACTIVE')");
+            PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO events (tournamentDate, registrationStart, registrationEnd, pdga, tournamentTitle, region, externalLink, status) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE')");
             statement.setString(1, safeFormat(discGolfEventDTO.getTournamentDate()));
             statement.setString(2, safeFormat(discGolfEventDTO.getRegistrationStart()));
             statement.setString(3, safeFormat(discGolfEventDTO.getRegistrationEnd()));
