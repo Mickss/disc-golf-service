@@ -33,7 +33,7 @@ public class DiscGolfDataService {
             Sheet sheet = workbook.createSheet("Events");
 
             Row headerRow = sheet.createRow(0);
-            String[] headers = {"ID", "Tournament Date", "Registration Start", "Registration End", "PDGA", "Title", "Region", "Link"};
+            String[] headers = {"ID", "Tournament Start", "Tournament End", "Registration Start", "Registration End", "PDGA", "Title", "Region", "Link", "Director", "Capacity"};
             for (int i = 0; i < headers.length; i++) {
                 headerRow.createCell(i).setCellValue(headers[i]);
             }
@@ -42,19 +42,24 @@ public class DiscGolfDataService {
             for (DiscGolfEventDTO event : events) {
                 Row row = sheet.createRow(rowIdx++);
                 String linksForExcel = convertSemicolonToNewline(event.getExternalLink());
-                row.createCell(0).setCellValue(event.getId());
-                row.createCell(1).setCellValue(event.getTournamentDate() != null ? event.getTournamentDate().toString() : "");
-                row.createCell(2).setCellValue(event.getRegistrationStart() != null ? event.getRegistrationStart().toString() : "");
-                row.createCell(3).setCellValue(event.getRegistrationEnd() != null ? event.getRegistrationEnd().toString() : "");
-                row.createCell(4).setCellValue(event.getPdga());
-                row.createCell(5).setCellValue(event.getTournamentTitle());
-                row.createCell(6).setCellValue(event.getRegion());
 
-                Cell linkCell = row.createCell(7);
+                row.createCell(0).setCellValue(event.getId());
+                row.createCell(1).setCellValue(event.getTournamentDateStart() != null ? event.getTournamentDateStart().toString() : "");
+                row.createCell(2).setCellValue(event.getTournamentDateEnd() != null ? event.getTournamentDateEnd().toString() : "");
+                row.createCell(3).setCellValue(event.getRegistrationStart() != null ? event.getRegistrationStart().toString() : "");
+                row.createCell(4).setCellValue(event.getRegistrationEnd() != null ? event.getRegistrationEnd().toString() : "");
+                row.createCell(5).setCellValue(event.getPdga());
+                row.createCell(6).setCellValue(event.getTournamentTitle());
+                row.createCell(7).setCellValue(event.getRegion());
+
+                Cell linkCell = row.createCell(8);
                 linkCell.setCellValue(linksForExcel);
                 CellStyle style = workbook.createCellStyle();
                 style.setWrapText(true);
                 linkCell.setCellStyle(style);
+
+                row.createCell(9).setCellValue(event.getTournamentDirector() != null ? event.getTournamentDirector() : "");
+                row.createCell(10).setCellValue(event.getCapacity() != null ? event.getCapacity().toString() : "");
             }
 
             for (int i = 0; i < headers.length; i++) {
@@ -94,33 +99,46 @@ public class DiscGolfDataService {
             Row row = sheet.getRow(i);
             if (row == null) continue;
 
-            Date tournamentDate = getCellValueAsDate(row.getCell(1));
-            Date registrationStart = getCellValueAsDate(row.getCell(2));
-            Date registrationEnd = getCellValueAsDate(row.getCell(3));
-            String pdga = row.getCell(4) != null ? row.getCell(4).getStringCellValue() : "";
-            String tournamentTitle = row.getCell(5) != null ? row.getCell(5).getStringCellValue().trim() : "";
-            String region = row.getCell(6) != null ? row.getCell(6).getStringCellValue() : "";
-            String externalLinkRaw = row.getCell(7) != null ? row.getCell(7).getStringCellValue() : "";
+            Date tournamentDateStart = getCellValueAsDate(row.getCell(1));
+            Date tournamentDateEnd = getCellValueAsDate(row.getCell(2));
+            Date registrationStart = getCellValueAsDate(row.getCell(3));
+            Date registrationEnd = getCellValueAsDate(row.getCell(4));
+            String pdga = row.getCell(5) != null ? row.getCell(5).getStringCellValue() : "";
+            String tournamentTitle = row.getCell(6) != null ? row.getCell(6).getStringCellValue().trim() : "";
+            String region = row.getCell(7) != null ? row.getCell(7).getStringCellValue() : "";
+            String externalLinkRaw = row.getCell(8) != null ? row.getCell(8).getStringCellValue() : "";
             String externalLink = convertNewlineToSemicolon(externalLinkRaw);
+            String tournamentDirector = row.getCell(9) != null ? row.getCell(9).getStringCellValue() : "";
+            Integer capacity = null;
+            if (row.getCell(10) != null) {
+                try {
+                    capacity = (int) row.getCell(10).getNumericCellValue();
+                } catch (Exception e) {
+                    log.warn("Invalid capacity value at row {}: {}", i, e.getMessage());
+                }
+            }
 
             if (tournamentTitle.isEmpty()) {
                 log.warn("Skipping row {} - missing title", i);
                 continue;
             }
-            if (tournamentDate == null) {
-                log.warn("Skipping row {} - missing tournament date", i);
+            if (tournamentDateStart == null) {
+                log.warn("Skipping row {} - missing tournament start date", i);
                 continue;
             }
 
             DiscGolfEventDTO event = new DiscGolfEventDTO(
                     null,
-                    tournamentDate,
+                    tournamentDateStart,
+                    tournamentDateEnd,
                     registrationStart,
                     registrationEnd,
                     pdga,
                     tournamentTitle,
                     region,
-                    externalLink
+                    externalLink,
+                    tournamentDirector,
+                    capacity
             );
 
             if (discGolfEventService.eventExistsByTitle(tournamentTitle)) {
