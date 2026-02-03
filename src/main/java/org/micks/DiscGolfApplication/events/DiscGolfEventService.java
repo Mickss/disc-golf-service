@@ -66,7 +66,7 @@ public class DiscGolfEventService {
                         resultSet.getString("region"),
                         resultSet.getString("externalLink"),
                         resultSet.getString("tournamentDirector"),
-                        resultSet.getObject("capacity", Integer.class)
+                        resultSet.getInt("capacity")
                 );
                 discGolfEventDTOList.add(discGolfEventDTO);
             }

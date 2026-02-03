@@ -6,8 +6,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.micks.DiscGolfApplication.exceptions.ImportException;
 import org.springframework.stereotype.Service;
 
-import static org.apache.poi.ss.usermodel.CellType.*;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +13,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
+import static org.apache.poi.ss.usermodel.CellType.BLANK;
+import static org.apache.poi.ss.usermodel.CellType.NUMERIC;
 
 @Service
 @Slf4j
@@ -58,8 +59,8 @@ public class DiscGolfDataService {
                 style.setWrapText(true);
                 linkCell.setCellStyle(style);
 
-                row.createCell(9).setCellValue(event.getTournamentDirector() != null ? event.getTournamentDirector() : "");
-                row.createCell(10).setCellValue(event.getCapacity() != null ? event.getCapacity().toString() : "");
+                row.createCell(9).setCellValue(event.getTournamentDirector());
+                row.createCell(10).setCellValue(event.getCapacity());
             }
 
             for (int i = 0; i < headers.length; i++) {
@@ -109,14 +110,7 @@ public class DiscGolfDataService {
             String externalLinkRaw = row.getCell(8) != null ? row.getCell(8).getStringCellValue() : "";
             String externalLink = convertNewlineToSemicolon(externalLinkRaw);
             String tournamentDirector = row.getCell(9) != null ? row.getCell(9).getStringCellValue() : "";
-            Integer capacity = null;
-            if (row.getCell(10) != null) {
-                try {
-                    capacity = (int) row.getCell(10).getNumericCellValue();
-                } catch (Exception e) {
-                    log.warn("Invalid capacity value at row {}: {}", i, e.getMessage());
-                }
-            }
+            Integer capacity = row.getCell(10) != null ? (int) row.getCell(10).getNumericCellValue() : null;
 
             if (tournamentTitle.isEmpty()) {
                 log.warn("Skipping row {} - missing title", i);
