@@ -54,14 +54,14 @@ public class EventRegistrationService {
         List<DiscGolfEventDTO> events = new ArrayList<>();
 
         String sql = """
-                    SELECT e.id, e.tournamentDate, e.registrationStart, e.registrationEnd, e.pdga, e.tournamentTitle, e.region, e.externalLink
-                    FROM user_event ue 
-                    JOIN events e ON ue.event_id = e.id 
-                    WHERE ue.user_id = ? 
-                    AND ue.active = true 
-                    AND e.status != 'DELETED'
-                    ORDER BY e.tournamentDate
-                """;
+                SELECT e.id, e.tournamentDateStart, e.tournamentDateEnd, e.registrationStart, e.registrationEnd, e.pdga, e.tournamentTitle, e.region, e.externalLink, e.tournamentDirector, e.capacity
+                FROM user_event ue 
+                JOIN events e ON ue.event_id = e.id 
+                WHERE ue.user_id = ? 
+                AND ue.active = true 
+                AND e.status != 'DELETED'
+                ORDER BY e.tournamentDateStart
+            """;
 
         try (Connection connection = dbConnection.connect();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -70,13 +70,16 @@ public class EventRegistrationService {
             while (resultSet.next()) {
                 DiscGolfEventDTO event = new DiscGolfEventDTO(
                         resultSet.getString("id"),
-                        resultSet.getDate("tournamentDate"),
+                        resultSet.getDate("tournamentDateStart"),
+                        resultSet.getDate("tournamentDateEnd"),
                         resultSet.getDate("registrationStart"),
                         resultSet.getDate("registrationEnd"),
                         resultSet.getString("pdga"),
                         resultSet.getString("tournamentTitle"),
                         resultSet.getString("region"),
-                        resultSet.getString("externalLink")
+                        resultSet.getString("externalLink"),
+                        resultSet.getString("tournamentDirector"),
+                        resultSet.getObject("capacity", Integer.class)
                 );
                 log.debug("Fetched event: {}", event);
                 events.add(event);
