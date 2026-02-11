@@ -44,6 +44,7 @@ public class DiscGolfEventService {
             String query = "SELECT * FROM events WHERE status != 'DELETED'";
             if (valueToOrderBy != null) {
                 if (!allowedColumnNames.contains(valueToOrderBy)) {
+                    log.warn("Incorrect order column name: " + valueToOrderBy);
                     throw new BadRequestException("Incorrect order column name: " + valueToOrderBy);
                 }
                 query += " ORDER BY " + valueToOrderBy;
