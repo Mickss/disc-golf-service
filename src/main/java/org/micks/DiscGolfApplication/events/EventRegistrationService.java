@@ -20,10 +20,11 @@ public class EventRegistrationService {
     @Autowired
     private DiscGolfDbConnection dbConnection;
 
-    public void registerUserForEvent(String userId, String eventId) {
-        log.info("Registered user {} for event: {}", userId, eventId);
+    public void addEventToFavorites(String userId, String eventId) {
+        log.info("Adding event {} to favorites for user: {}", eventId, userId);
         try (Connection connection = dbConnection.connect();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO user_event (user_id, event_id) VALUES (?, ?)")) {
+             PreparedStatement statement = connection.prepareStatement(
+                     "INSERT INTO user_event (id, user_id, event_id) VALUES (UUID(), ?, ?)")) {
             statement.setString(1, userId);
             statement.setString(2, eventId);
             statement.executeUpdate();
@@ -32,8 +33,8 @@ public class EventRegistrationService {
         }
     }
 
-    public void unregisterUserFromEvent(String userId, String eventId) {
-        log.info("Unregistering user {} from event: {}", userId, eventId);
+    public void removeEventFromFavorites(String userId, String eventId) {
+        log.info("Removing event {} from favorites for user: {}", eventId, userId);
         try (Connection connection = dbConnection.connect();
              PreparedStatement statement = connection.prepareStatement("DELETE FROM user_event WHERE user_id = ? AND event_id = ?")) {
             statement.setString(1, userId);
@@ -58,7 +59,6 @@ public class EventRegistrationService {
                 FROM user_event ue 
                 JOIN events e ON ue.event_id = e.id 
                 WHERE ue.user_id = ? 
-                AND ue.active = true 
                 AND e.status != 'DELETED'
                 ORDER BY e.tournamentDateStart
             """;
