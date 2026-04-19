@@ -94,26 +94,26 @@ public class DiscGolfEventsController {
         discGolfEventService.editEvents(eventId, discGolfEventDTO);
     }
 
-    @PostMapping("/{eventId}/register")
-    public void registerUserForEvent(@RequestHeader(value = "X-User-Id") String userIdHeader,
-                                     @PathVariable String eventId) {
-        log.info("Starting registration on event {} for user {}", eventId, userIdHeader);
+    @PostMapping("/{eventId}/favorite")
+    public void addToEventFavorites(@RequestHeader(value = "X-User-Id") String userIdHeader,
+                               @PathVariable String eventId) {
+        log.info("Adding event {} to favorites for user {}", eventId, userIdHeader);
         if (userIdHeader == null || userIdHeader.isEmpty()) {
             log.warn("X-User-Id header is missing or empty in the request");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Id header is required");
         }
-        eventRegistrationService.registerUserForEvent(userIdHeader, eventId);
+        eventRegistrationService.addEventToFavorites(userIdHeader, eventId);
     }
 
-    @DeleteMapping("/{eventId}/unregister")
-    public void unregisterUserFromEvent(@RequestHeader(value = "X-User-Id") String userIdHeader,
-                                        @PathVariable String eventId) {
-        log.info("Starting unregistration from event {} for user {}", eventId, userIdHeader);
+    @DeleteMapping("/{eventId}/favorite")
+    public void removeEventFromFavorites(@RequestHeader(value = "X-User-Id") String userIdHeader,
+                                    @PathVariable String eventId) {
+        log.info("Removing event {} from favorites for user {}", eventId, userIdHeader);
         if (userIdHeader == null || userIdHeader.isEmpty()) {
             log.warn("X-User-Id header is missing or empty in the request");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Id header is required");
         }
-        eventRegistrationService.unregisterUserFromEvent(userIdHeader, eventId);
+        eventRegistrationService.removeEventFromFavorites(userIdHeader, eventId);
     }
 
     @GetMapping("/my-events")
