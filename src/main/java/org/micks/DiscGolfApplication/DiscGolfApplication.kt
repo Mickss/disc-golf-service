@@ -5,8 +5,10 @@ import org.micks.DiscGolfApplication.connection.DatabaseConfigProperties
 import org.micks.DiscGolfApplication.util.logger
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
+@EnableScheduling
 class DiscGolfApplication(private val databaseConfigProperties: DatabaseConfigProperties) {
     private val log = logger()
 

@@ -24,7 +24,7 @@ public class EventRegistrationService {
         log.info("Adding event {} to favorites for user: {}", eventId, userId);
         try (Connection connection = dbConnection.connect();
              PreparedStatement statement = connection.prepareStatement(
-                     "INSERT INTO user_event (id, user_id, event_id) VALUES (UUID(), ?, ?)")) {
+                     "INSERT IGNORE INTO user_event (id, user_id, event_id) VALUES (UUID(), ?, ?)")) {
             statement.setString(1, userId);
             statement.setString(2, eventId);
             statement.executeUpdate();
@@ -55,13 +55,13 @@ public class EventRegistrationService {
         List<DiscGolfEventDTO> events = new ArrayList<>();
 
         String sql = """
-                SELECT e.id, e.tournamentDateStart, e.tournamentDateEnd, e.registrationStart, e.registrationEnd, e.pdga, e.tournamentTitle, e.region, e.externalLink, e.tournamentDirector, e.capacity
-                FROM user_event ue 
-                JOIN events e ON ue.event_id = e.id 
-                WHERE ue.user_id = ? 
-                AND e.status != 'DELETED'
-                ORDER BY e.tournamentDateStart
-            """;
+                    SELECT e.id, e.tournamentDateStart, e.tournamentDateEnd, e.registrationStart, e.registrationEnd, e.pdga, e.tournamentTitle, e.region, e.externalLink, e.tournamentDirector, e.capacity, e.reminder_datetime, e.email_subject, e.email_template
+                    FROM user_event ue 
+                    JOIN events e ON ue.event_id = e.id 
+                    WHERE ue.user_id = ? 
+                    AND e.status != 'DELETED'
+                    ORDER BY e.tournamentDateStart
+                """;
 
         try (Connection connection = dbConnection.connect();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -79,7 +79,10 @@ public class EventRegistrationService {
                         resultSet.getString("region"),
                         resultSet.getString("externalLink"),
                         resultSet.getString("tournamentDirector"),
-                        resultSet.getObject("capacity", Integer.class)
+                        resultSet.getObject("capacity", Integer.class),
+                        resultSet.getTimestamp("reminder_datetime"),
+                        resultSet.getString("email_subject"),
+                        resultSet.getString("email_template")
                 );
                 log.debug("Fetched event: {}", event);
                 events.add(event);

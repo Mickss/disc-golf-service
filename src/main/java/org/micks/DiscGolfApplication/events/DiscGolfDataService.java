@@ -34,12 +34,13 @@ public class DiscGolfDataService {
             Sheet sheet = workbook.createSheet("Events");
 
             Row headerRow = sheet.createRow(0);
-            String[] headers = {"ID", "Tournament Start", "Tournament End", "Registration Start", "Registration End", "PDGA", "Title", "Region", "Link", "Director", "Capacity"};
+            String[] headers = {"ID", "Tournament Start", "Tournament End", "Registration Start", "Registration End", "PDGA", "Title", "Region", "Link", "Director", "Capacity", "Reminder Datetime", "Email Subject", "Email Template"};
             for (int i = 0; i < headers.length; i++) {
                 headerRow.createCell(i).setCellValue(headers[i]);
             }
 
             int rowIdx = 1;
+            SimpleDateFormat datetimeFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             for (DiscGolfEventDTO event : events) {
                 Row row = sheet.createRow(rowIdx++);
                 String linksForExcel = convertSemicolonToNewline(event.getExternalLink());
@@ -61,6 +62,11 @@ public class DiscGolfDataService {
 
                 row.createCell(9).setCellValue(event.getTournamentDirector());
                 row.createCell(10).setCellValue(event.getCapacity());
+                String reminderStr = event.getReminderDatetime() != null ? datetimeFormatter.format(event.getReminderDatetime()) : "";
+                row.createCell(11).setCellValue(reminderStr);
+
+                row.createCell(12).setCellValue(event.getEmailSubject() != null ? event.getEmailSubject() : "");
+                row.createCell(13).setCellValue(event.getEmailTemplate() != null ? event.getEmailTemplate() : "");
             }
 
             for (int i = 0; i < headers.length; i++) {
@@ -111,6 +117,9 @@ public class DiscGolfDataService {
             String externalLink = convertNewlineToSemicolon(externalLinkRaw);
             String tournamentDirector = row.getCell(9) != null ? row.getCell(9).getStringCellValue() : "";
             Integer capacity = row.getCell(10) != null ? (int) row.getCell(10).getNumericCellValue() : null;
+            Date reminderDatetime = getCellValueAsDatetime(row.getCell(11));
+            String emailSubject = row.getCell(12) != null ? row.getCell(12).getStringCellValue() : "";
+            String emailTemplate = row.getCell(13) != null ? row.getCell(13).getStringCellValue() : "";
 
             if (tournamentTitle.isEmpty()) {
                 log.warn("Skipping row {} - missing title", i);
@@ -132,7 +141,11 @@ public class DiscGolfDataService {
                     region,
                     externalLink,
                     tournamentDirector,
-                    capacity
+                    capacity,
+                    reminderDatetime,
+                    emailSubject,
+                    emailTemplate
+
             );
 
             if (discGolfEventService.eventExistsByTitle(tournamentTitle)) {
@@ -172,6 +185,27 @@ public class DiscGolfDataService {
             return sdf.parse(dateStr);
         } catch (ParseException e) {
             throw new ImportException("Cannot parse date: " + dateStr);
+        }
+    }
+
+    private Date getCellValueAsDatetime(Cell cell) {
+        if (cell == null || cell.getCellType() == BLANK) {
+            return null;
+        }
+
+        if (cell.getCellType() == NUMERIC) {
+            return cell.getDateCellValue();
+        }
+
+        String dateStr = cell.getStringCellValue();
+        if (dateStr.isEmpty()) {
+            return null;
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            return sdf.parse(dateStr);
+        } catch (ParseException e) {
+            throw new ImportException("Cannot parse datetime: " + dateStr + ". The expected format is yyyy-MM-dd HH:mm:ss");
         }
     }
 }

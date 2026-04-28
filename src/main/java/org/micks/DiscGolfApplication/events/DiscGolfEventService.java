@@ -24,9 +24,14 @@ import java.util.List;
 public class DiscGolfEventService {
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private String safeFormat(java.util.Date date) {
         return date != null ? DATE_FORMAT.format(date) : null;
+    }
+
+    private String safeDatetimeFormat(java.util.Date date) {
+        return date != null ? DATETIME_FORMAT.format(date) : null;
     }
 
     @Autowired
@@ -67,7 +72,10 @@ public class DiscGolfEventService {
                         resultSet.getString("region"),
                         resultSet.getString("externalLink"),
                         resultSet.getString("tournamentDirector"),
-                        resultSet.getInt("capacity")
+                        resultSet.getObject("capacity", Integer.class),
+                        resultSet.getTimestamp("reminder_datetime"),
+                        resultSet.getString("email_subject"),
+                        resultSet.getString("email_template")
                 );
                 discGolfEventDTOList.add(discGolfEventDTO);
             }
@@ -81,8 +89,8 @@ public class DiscGolfEventService {
         log.info("Creating new event: {}", discGolfEventDTO.getTournamentTitle());
         try (Connection connection = dbConnection.connect()) {
             PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO events (tournamentDateStart, tournamentDateEnd, registrationStart, registrationEnd, pdga, tournamentTitle, region, externalLink, tournamentDirector, capacity, status) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')");
+                    "INSERT INTO events (tournamentDateStart, tournamentDateEnd, registrationStart, registrationEnd, pdga, tournamentTitle, region, externalLink, tournamentDirector, capacity, reminder_datetime, email_subject, email_template, status) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')");
             statement.setString(1, safeFormat(discGolfEventDTO.getTournamentDateStart()));
             statement.setString(2, safeFormat(discGolfEventDTO.getTournamentDateEnd()));
             statement.setString(3, safeFormat(discGolfEventDTO.getRegistrationStart()));
@@ -93,6 +101,9 @@ public class DiscGolfEventService {
             statement.setString(8, discGolfEventDTO.getExternalLink());
             statement.setString(9, discGolfEventDTO.getTournamentDirector());
             statement.setObject(10, discGolfEventDTO.getCapacity());
+            statement.setString(11, safeDatetimeFormat(discGolfEventDTO.getReminderDatetime()));
+            statement.setString(12, discGolfEventDTO.getEmailSubject());
+            statement.setString(13, discGolfEventDTO.getEmailTemplate());
             statement.execute();
             statement.close();
         } catch (SQLException e) {
@@ -118,7 +129,10 @@ public class DiscGolfEventService {
                         resultSet.getString("region"),
                         resultSet.getString("externalLink"),
                         resultSet.getString("tournamentDirector"),
-                        resultSet.getObject("capacity", Integer.class)
+                        resultSet.getObject("capacity", Integer.class),
+                        resultSet.getTimestamp("reminder_datetime"),
+                        resultSet.getString("email_subject"),
+                        resultSet.getString("email_template")
                 );
                 statement.close();
                 return discGolfEventDTO;
@@ -144,7 +158,10 @@ public class DiscGolfEventService {
                             "region = ?, " +
                             "externalLink = ?, " +
                             "tournamentDirector = ?, " +
-                            "capacity = ? " +
+                            "capacity = ?, " +
+                            "reminder_datetime = ?, " +
+                            "email_subject = ?, " +
+                            "email_template = ? " +
                             "WHERE id = ? AND status != 'DELETED'");
             statement.setString(1, safeFormat(discGolfEventDTO.getTournamentDateStart()));
             statement.setString(2, safeFormat(discGolfEventDTO.getTournamentDateEnd()));
@@ -156,7 +173,10 @@ public class DiscGolfEventService {
             statement.setString(8, discGolfEventDTO.getExternalLink());
             statement.setString(9, discGolfEventDTO.getTournamentDirector());
             statement.setObject(10, discGolfEventDTO.getCapacity());
-            statement.setString(11, eventId);
+            statement.setString(11, safeDatetimeFormat(discGolfEventDTO.getReminderDatetime()));
+            statement.setString(12, discGolfEventDTO.getEmailSubject());
+            statement.setString(13, discGolfEventDTO.getEmailTemplate());
+            statement.setString(14, eventId);
             statement.execute();
             statement.close();
         } catch (SQLException e) {
@@ -261,7 +281,10 @@ public class DiscGolfEventService {
                     "region = ?, " +
                     "externalLink = ?, " +
                     "tournamentDirector = ?, " +
-                    "capacity = ? " +
+                    "capacity = ?, " +
+                    "reminder_datetime = ?, " +
+                    "email_subject = ?, " +
+                    "email_template = ? " +
                     "WHERE tournamentTitle = ? AND status != 'DELETED'";
 
             PreparedStatement stmt = connection.prepareStatement(query);
@@ -276,7 +299,12 @@ public class DiscGolfEventService {
             stmt.setString(7, event.getExternalLink());
             stmt.setString(8, event.getTournamentDirector());
             stmt.setObject(9, event.getCapacity());
-            stmt.setString(10, tournamentTitle);
+            setTimestampParameter(stmt, 10, event.getReminderDatetime());
+
+            stmt.setString(11, event.getEmailSubject());
+            stmt.setString(12, event.getEmailTemplate());
+
+            stmt.setString(13, tournamentTitle);
 
             stmt.executeUpdate();
             log.info("Updated event: {}", tournamentTitle);
@@ -292,6 +320,14 @@ public class DiscGolfEventService {
             stmt.setDate(parameterIndex, new java.sql.Date(date.getTime()));
         } else {
             stmt.setNull(parameterIndex, java.sql.Types.DATE);
+        }
+    }
+
+    private void setTimestampParameter(PreparedStatement stmt, int parameterIndex, Date date) throws SQLException {
+        if (date != null) {
+            stmt.setTimestamp(parameterIndex, new java.sql.Timestamp(date.getTime()));
+        } else {
+            stmt.setNull(parameterIndex, java.sql.Types.TIMESTAMP);
         }
     }
 }
