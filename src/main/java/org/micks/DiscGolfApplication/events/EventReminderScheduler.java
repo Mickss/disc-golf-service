@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -24,6 +23,7 @@ public class EventReminderScheduler {
     public void processReminders() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime windowEnd = now.plusMinutes(10);
+        LocalDateTime yesterday = now.minusHours(24);
 
         log.info("Checking reminders in the window: {} - {}", now, windowEnd);
 
@@ -33,19 +33,21 @@ public class EventReminderScheduler {
                 FROM user_event ue
                 JOIN events e ON ue.event_id = e.id
                 JOIN users u ON ue.user_id = u.user_id
-                LEFT JOIN sent_notifications sn ON (sn.user_id = u.user_id AND sn.event_id = e.id)
-                WHERE sn.id IS NULL 
+                WHERE ue.reminder_sent = 0 
                   AND e.reminder_datetime BETWEEN ? AND ?
+                  AND ue.created_at < ?
                 """;
 
-        String insertHistorySql = "INSERT INTO sent_notifications (id, user_id, event_id) VALUES (?, ?, ?)";
+        String updateHistorySql = "UPDATE user_event SET reminder_sent = 1 WHERE user_id = ? AND event_id = ?";
 
         try (Connection connection = dbConnection.connect();
              PreparedStatement selectStmt = connection.prepareStatement(selectSql);
-             PreparedStatement historyStmt = connection.prepareStatement(insertHistorySql)) {
+             PreparedStatement updateStmt = connection.prepareStatement(updateHistorySql)) {
 
             selectStmt.setTimestamp(1, Timestamp.valueOf(now));
             selectStmt.setTimestamp(2, Timestamp.valueOf(windowEnd));
+            selectStmt.setTimestamp(3, Timestamp.valueOf(yesterday));
+
             ResultSet rs = selectStmt.executeQuery();
 
             while (rs.next()) {
@@ -66,15 +68,18 @@ public class EventReminderScheduler {
                         .replace("[DATE]", dateStr)
                         .replace("[LINK]", "https://app.disc-golf.pl/events/" + eventId);
 
-                String finalSubject = (subject != null && !subject.isEmpty()) ? subject : "Reminder: " + title;
+                String rawSubject = (subject != null && !subject.isEmpty()) ? subject : "Reminder: [TOURNAMENT]";
+                String finalSubject = rawSubject
+                        .replace("[TOURNAMENT]", title)
+                        .replace("[DATE]", dateStr);
 
                 boolean isSent = tournamentEmailService.sendRawEmail(email, finalSubject, finalBody);
 
                 if (isSent) {
-                    historyStmt.setString(1, UUID.randomUUID().toString());
-                    historyStmt.setString(2, userId);
-                    historyStmt.setString(3, eventId);
-                    historyStmt.executeUpdate();
+                    updateStmt.setString(1, userId);
+                    updateStmt.setString(2, eventId);
+                    updateStmt.executeUpdate();
+                    log.info("Successfully updated reminder_sent flag to 1 for user: {}", userId);
                 }
             }
         } catch (SQLException e) {
