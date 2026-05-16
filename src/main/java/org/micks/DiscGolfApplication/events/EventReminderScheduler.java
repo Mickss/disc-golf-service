@@ -3,6 +3,7 @@ package org.micks.DiscGolfApplication.events;
 import lombok.extern.slf4j.Slf4j;
 import org.micks.DiscGolfApplication.connection.DiscGolfDbConnection;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,9 @@ import java.time.LocalDateTime;
 @Service
 @Slf4j
 public class EventReminderScheduler {
+
+    @Value("${app.base.url:https://app.disc-golf.pl}")
+    private String appBaseUrl;
 
     @Autowired
     private DiscGolfDbConnection dbConnection;
@@ -33,8 +37,8 @@ public class EventReminderScheduler {
                 FROM user_event ue
                 JOIN events e ON ue.event_id = e.id
                 JOIN users u ON ue.user_id = u.user_id
-                WHERE ue.reminder_sent = 0 
-                  AND e.reminder_datetime BETWEEN ? AND ?
+                WHERE ue.reminder_sent = 0\s
+                  AND e.reminder_datetime <= ?
                   AND ue.created_at < ?
                 """;
 
@@ -44,9 +48,8 @@ public class EventReminderScheduler {
              PreparedStatement selectStmt = connection.prepareStatement(selectSql);
              PreparedStatement updateStmt = connection.prepareStatement(updateHistorySql)) {
 
-            selectStmt.setTimestamp(1, Timestamp.valueOf(now));
-            selectStmt.setTimestamp(2, Timestamp.valueOf(windowEnd));
-            selectStmt.setTimestamp(3, Timestamp.valueOf(yesterday));
+            selectStmt.setTimestamp(1, Timestamp.valueOf(windowEnd));
+            selectStmt.setTimestamp(2, Timestamp.valueOf(yesterday));
 
             ResultSet rs = selectStmt.executeQuery();
 
@@ -66,7 +69,7 @@ public class EventReminderScheduler {
                 String finalBody = rawTemplate
                         .replace("[TOURNAMENT]", title)
                         .replace("[DATE]", dateStr)
-                        .replace("[LINK]", "https://app.disc-golf.pl/events/" + eventId);
+                        .replace("[LINK]", appBaseUrl + "/events/" + eventId);
 
                 String rawSubject = (subject != null && !subject.isEmpty()) ? subject : "Reminder: [TOURNAMENT]";
                 String finalSubject = rawSubject

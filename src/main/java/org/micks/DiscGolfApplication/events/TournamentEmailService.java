@@ -31,7 +31,7 @@ public class TournamentEmailService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
         try {
-            restTemplate.postForEntity(emailServiceUrl + "/email/send-raw", request, Void.class);
+            restTemplate.postForEntity(emailServiceUrl + "/public/email/send-raw", request, Void.class);
             log.info("The RAW email was successfully sent to: {}", userEmail);
             return true;
         } catch (Exception e) {
