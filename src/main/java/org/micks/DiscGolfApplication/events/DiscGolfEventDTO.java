@@ -21,4 +21,7 @@ public class DiscGolfEventDTO {
     private String externalLink;
     private String tournamentDirector;
     private Integer capacity;
+    private Date reminderDatetime;
+    private String emailSubject;
+    private String emailTemplate;
 }
