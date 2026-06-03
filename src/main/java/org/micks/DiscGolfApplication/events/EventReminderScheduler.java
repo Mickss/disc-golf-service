@@ -23,13 +23,13 @@ public class EventReminderScheduler {
     @Autowired
     private TournamentEmailService tournamentEmailService;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 1800000)
     public void processReminders() {
+        log.info("Scheduler for sending reminders started");
+
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime windowEnd = now.plusMinutes(10);
         LocalDateTime yesterday = now.minusHours(24);
-
-        log.info("Checking reminders in the window: {} - {}", now, windowEnd);
 
         String selectSql = """
                 SELECT u.email as user_email, u.user_id, e.id as event_id, e.tournamentTitle, 
@@ -37,7 +37,7 @@ public class EventReminderScheduler {
                 FROM user_event ue
                 JOIN events e ON ue.event_id = e.id
                 JOIN users u ON ue.user_id = u.user_id
-                WHERE ue.reminder_sent = 0\s
+                WHERE ue.reminder_sent = 0 
                   AND e.reminder_datetime <= ?
                   AND ue.created_at < ?
                 """;
@@ -58,13 +58,19 @@ public class EventReminderScheduler {
                 String userId = rs.getString("user_id");
                 String eventId = rs.getString("event_id");
                 String title = rs.getString("tournamentTitle");
+
+                log.info("Processing reminder - eventId: {}, title: {}, userId: {}", eventId, title, userId);
+
                 String rawTemplate = rs.getString("email_template");
                 String subject = rs.getString("email_subject");
 
                 Timestamp regStart = rs.getTimestamp("registrationStart");
                 String dateStr = regStart != null ? new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm").format(regStart) : "TBD";
 
-                if (rawTemplate == null || rawTemplate.isEmpty()) continue;
+                if (rawTemplate == null || rawTemplate.isEmpty()) {
+                    log.warn("Skipping email send. Template is missing or empty for eventId: {}, userId: {}", eventId, userId);
+                    continue;
+                }
 
                 String finalBody = rawTemplate
                         .replace("[TOURNAMENT]", title)
