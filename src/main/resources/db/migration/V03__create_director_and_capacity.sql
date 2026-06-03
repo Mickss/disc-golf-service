@@ -1,0 +1,3 @@
+ALTER TABLE events
+    ADD COLUMN IF NOT EXISTS tournamentDirector VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS capacity INT;
