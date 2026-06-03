@@ -58,13 +58,19 @@ public class EventReminderScheduler {
                 String userId = rs.getString("user_id");
                 String eventId = rs.getString("event_id");
                 String title = rs.getString("tournamentTitle");
+
+                log.info("Processing reminder - eventId: {}, title: {}, userId: {}", eventId, title, userId);
+
                 String rawTemplate = rs.getString("email_template");
                 String subject = rs.getString("email_subject");
 
                 Timestamp regStart = rs.getTimestamp("registrationStart");
                 String dateStr = regStart != null ? new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm").format(regStart) : "TBD";
 
-                if (rawTemplate == null || rawTemplate.isEmpty()) continue;
+                if (rawTemplate == null || rawTemplate.isEmpty()) {
+                    log.warn("Skipping email send. Template is missing or empty for eventId: {}, userId: {}", eventId, userId);
+                    continue;
+                }
 
                 String finalBody = rawTemplate
                         .replace("[TOURNAMENT]", title)
