@@ -23,13 +23,13 @@ public class EventReminderScheduler {
     @Autowired
     private TournamentEmailService tournamentEmailService;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 1800000)
     public void processReminders() {
+        log.info("Scheduler for sending reminders started");
+
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime windowEnd = now.plusMinutes(10);
         LocalDateTime yesterday = now.minusHours(24);
-
-        log.info("Checking reminders in the window: {} - {}", now, windowEnd);
 
         String selectSql = """
                 SELECT u.email as user_email, u.user_id, e.id as event_id, e.tournamentTitle, 
@@ -37,7 +37,7 @@ public class EventReminderScheduler {
                 FROM user_event ue
                 JOIN events e ON ue.event_id = e.id
                 JOIN users u ON ue.user_id = u.user_id
-                WHERE ue.reminder_sent = 0\s
+                WHERE ue.reminder_sent = 0 
                   AND e.reminder_datetime <= ?
                   AND ue.created_at < ?
                 """;
