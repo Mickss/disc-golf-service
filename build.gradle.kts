@@ -9,6 +9,8 @@ plugins {
 group = "org.micks"
 version = "0.0.1-SNAPSHOT"
 
+val mockitoAgent = configurations.create("mockitoAgent")
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -35,8 +37,14 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.test {
+    useJUnitPlatform()
+    jvmArgs("-javaagent:${mockitoAgent.asPath}")
 }
