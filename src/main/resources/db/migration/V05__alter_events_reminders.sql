@@ -1,0 +1,5 @@
+ALTER TABLE events
+    ADD COLUMN IF NOT EXISTS email_template TEXT,
+    ADD COLUMN IF NOT EXISTS email_subject VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS reminder_datetime DATETIME,
+    ADD COLUMN IF NOT EXISTS reminder_enabled TINYINT(1) DEFAULT 0;
